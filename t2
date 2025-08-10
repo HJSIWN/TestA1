@@ -19,7 +19,7 @@ repeat
 	TimeWaitLoadGame = TimeWaitLoadGame + 0.1
 	if TimeWaitLoadGame > 3 or player:GetAttribute("HasDied") == true then
 		player:Kick()
-		wait(0.5)
+		wait(1)
 		game:GetService("TeleportService"):Teleport(126509999114328)
 	end
 until game.Players and game.Players.LocalPlayer and game.Players.LocalPlayer.Character
@@ -46,7 +46,7 @@ task.spawn(function()
 			end
 			if OutTick >= 35 or Stuck_Count > 2 or player:GetAttribute("HasDied") == true then
 				player:Kick()
-				wait(0.5)
+				wait(1)
 				game:GetService("TeleportService"):Teleport(126509999114328)
 			end
 			LastPosition = HMNRT.Position
@@ -239,6 +239,6 @@ else
 	end
 	wait(2)
 	player:Kick()
-	wait(0.5)
+	wait(1)
 	game:GetService("TeleportService"):Teleport(126509999114328)
 end
