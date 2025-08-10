@@ -1,4 +1,3 @@
-
 if not game:IsLoaded() then game.Loaded:Wait() end
 if not game:IsLoaded() then repeat task.wait() until game:IsLoaded() end
 
@@ -14,10 +13,11 @@ queue_on_teleport(queueScript)
 repeat wait(0.1) until game.Players
 local TimeWaitLoadGame = 0
 local player = game.Players.LocalPlayer
+
 repeat
 	wait(0.1)
 	TimeWaitLoadGame = TimeWaitLoadGame + 0.1
-	if TimeWaitLoadGame > 3 then
+	if TimeWaitLoadGame > 3 or player:GetAttribute("HasDied") == true then
 		player:Kick()
 		wait(0.5)
 		game:GetService("TeleportService"):Teleport(126509999114328)
@@ -44,7 +44,7 @@ task.spawn(function()
 				Stuck_Count = Stuck_Count + 1
 				print("Stuck "..Stuck_Count)
 			end
-			if OutTick >= 35 or Stuck_Count > 2 then
+			if OutTick >= 35 or Stuck_Count > 2 or player:GetAttribute("HasDied") == true then
 				player:Kick()
 				wait(0.5)
 				game:GetService("TeleportService"):Teleport(126509999114328)
