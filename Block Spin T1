@@ -248,15 +248,17 @@ local function smartWarpTo(targetPosition)
 	humanoid = character:FindFirstChildOfClass("Humanoid")
 	HMNRT = character:FindFirstChild("HumanoidRootPart")
 	
-	CounterTable = nil
-	for _, obj in ipairs(getgc(true)) do
-		if type(obj) == "table" and rawget(obj, "event") and rawget(obj, "func") then
-			CounterTable = obj
-			break
+	pcall(function()
+		CounterTable = nil
+		for _, obj in ipairs(getgc(true)) do
+			if type(obj) == "table" and rawget(obj, "event") and rawget(obj, "func") then
+				CounterTable = obj
+				break
+			end
 		end
-	end
-	CounterTable.event += 1
-	Send:FireServer(CounterTable.event,"set_sprinting_1",true)
+		CounterTable.event += 1
+		Send:FireServer(CounterTable.event,"set_sprinting_1",true)
+	end)
 	
 	local function splitWaypoint(startPos, endPos, maxDistance)
 		local direction = (endPos - startPos)
@@ -430,15 +432,17 @@ local function smartWarpTo(targetPosition)
 		end
 	end
 	
-	CounterTable = nil
-	for _, obj in ipairs(getgc(true)) do
-		if type(obj) == "table" and rawget(obj, "event") and rawget(obj, "func") then
-			CounterTable = obj
-			break
+	pcall(function()
+		CounterTable = nil
+		for _, obj in ipairs(getgc(true)) do
+			if type(obj) == "table" and rawget(obj, "event") and rawget(obj, "func") then
+				CounterTable = obj
+				break
+			end
 		end
-	end
-	CounterTable.event += 1
-	Send:FireServer(CounterTable.event,"set_sprinting_1",false)
+		CounterTable.event += 1
+		Send:FireServer(CounterTable.event,"set_sprinting_1",false)
+	end)
 
 	if success then
 		print("Reached target!")
