@@ -813,6 +813,30 @@ task.spawn(function()
 	end
 end)
 
+AntiAFK = false
+Tabs.Mode1:Toggle({
+	Title = Translate("ไม่โดนเตะ", "Anti AFK"),
+	Value = false,
+	Callback = function(state)
+		AntiAFK = state
+		if AntiAFK then
+			antiAfkConnection = game:GetService("Players").LocalPlayer.Idled:Connect(function()
+				local vu = game:GetService("VirtualUser")
+				vu:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+				task.wait(1)
+				vu:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+			end)
+		else
+			if antiAfkConnection then
+				antiAfkConnection:Disconnect()
+				antiAfkConnection = nil
+			end
+		end
+	end
+})
+
+Tabs.Mode1:Divider()
+
 Tabs.Mode1:Button({
 	Title = "BuyHardwareStore",
 	Desc = "คลิกเพื่อเซ็ท",
@@ -989,6 +1013,8 @@ Tabs.Mode2:Toggle({
 		end
 	end
 })
+
+Tabs.Mode2:Divider()
 
 Section = Tabs.Mode2:Section({ 
 	Title = "Section",
@@ -1239,7 +1265,7 @@ local function GotoNearATM()
 				until PlayerMoney < DepositMoneyWhen or UserHurt == true
 			end
 		end
-		task.wait()
+		task.wait(0.1)
 	until GoFinish == true
 end
 
@@ -1262,6 +1288,7 @@ task.spawn(function()
 	end
 end)
 
+Tabs.Mode2:Divider()
 
 Section = Tabs.Mode2:Section({ 
 	Title = "Section",
@@ -1269,7 +1296,6 @@ Section = Tabs.Mode2:Section({
 	TextSize = 25,
 })
 Section:SetTitle(Translate("🥩 ออโต้ทำงานร้านอาหาร", "🥩 Auto working restaurant"))
-
 
 Cook_Farm = false
 Tabs.Mode2:Toggle({
@@ -1387,6 +1413,7 @@ task.spawn(function()
 						CounterGetGC.event += 1
 						Send:FireServer(CounterGetGC.event,"apply_for_job",SteakHouseBeacon)
 					end
+					wait(0.1)
 				until player:GetAttribute("Job") == "steakhouse_cook" or Stock_Farm == false or Depositing == true or UserHurt == true
 				WindUI:Notify({
 					Title = "สมัครงานร้านอาหาร",
@@ -1395,20 +1422,18 @@ task.spawn(function()
 				})
 			else
 				
-				if Depositing == true or UserHurt == true then
-					repeat
-						task.wait(0.5)
-					until Depositing == false and UserHurt == false
-				end
-				
 				repeat
 					if CanCheckTool == false then
 						EquiNewJobTool()
 						CanCheckTool = true
 					end
-					
 					if JobApplicationFrame.Visible == true then
 						JobApplicationFrame.Visible = false
+					end
+					if Depositing == true or UserHurt == true then
+						repeat
+							task.wait(0.5)
+						until Depositing == false and UserHurt == false
 					end
 					
 					local smartWalkToJobBegin =	smartWarpTo(Area.Position + Vector3.new(0,-4,2))
@@ -1467,13 +1492,15 @@ task.spawn(function()
 
 						until not character:FindFirstChildOfClass("Tool") or Depositing == true or UserHurt == true or player:GetAttribute("Job") ~= "steakhouse_cook" 
 					end
-					
+					wait(0.1)
 				until Stock_Farm == false or player:GetAttribute("Job") ~= "steakhouse_cook" 
 			end
 		end
 		task.wait(1)
 	end
 end)
+
+Tabs.Mode2:Divider()
 
 Section = Tabs.Mode2:Section({ 
 	Title = "Section",
@@ -1547,6 +1574,7 @@ task.spawn(function()
 						CounterGetGC.event += 1
 						Send:FireServer(CounterGetGC.event,"apply_for_job",Quick11Beacon)
 					end
+					wait(0.1)
 				until player:GetAttribute("Job") == "shelf_stocker" or Stock_Farm == false or Depositing == true or UserHurt == true
 				WindUI:Notify({
 					Title = "สมัครงานจัดของ",
@@ -1601,9 +1629,7 @@ task.spawn(function()
 								end
 							end
 						end
-						
 						task.wait(0.1)
-						
 					until character:FindFirstChildOfClass("Tool") and character:FindFirstChildOfClass("Tool"):GetAttribute("JobTool") 
 						or player:GetAttribute("Job") ~= "shelf_stocker" or Depositing == true or UserHurt == true
 					
@@ -1640,13 +1666,15 @@ task.spawn(function()
 						end
 						
 					until not character:FindFirstChildOfClass("Tool") or Depositing == true or UserHurt == true
-					
+					wait(0.1)
 				until Stock_Farm == false or player:GetAttribute("Job") ~= "shelf_stocker" 
 			end
 		end
 		task.wait(1)
 	end
 end)
+
+Tabs.Mode2:Divider()
 
 Section = Tabs.Mode2:Section({ 
 	Title = "Section",
@@ -1732,6 +1760,7 @@ task.spawn(function()
 						CounterGetGC.event += 1
 						Send:FireServer(CounterGetGC.event,"apply_for_job",workspace:WaitForChild("BurgePlaceBeacon"))
 					end
+					wait(0.1)
 				until player:GetAttribute("Job") == "janitor" or Mob_Farm == false 
 					or Depositing == true or UserHurt == true
 				WindUI:Notify({
@@ -1760,17 +1789,22 @@ task.spawn(function()
 					
 					for i,v in ipairs(Puddles:GetChildren()) do
 						if v.Size.X > 4 and matchesAllowedKeyword(v.Name, NameNeedMob) then
-							----***LargePuddle / lvl.10
+							
 							----*Bronze Mop / lvl.10
-							----***NastyPuddle / lvl.20
 							----*Silver Mop / lvl.25
-							----***OilPuddle / lvl.35
 							----*Golden Mop / lvl.40
-							----***ToxicPuddle / lvl.50
 							----*Diamon Mop / lvl.55
-							if UserSkill_Janitor > 10 then
-								
-							end
+							
+							----***LargePuddle / lvl.10
+							----***NastyPuddle / lvl.20
+							----***OilPuddle / lvl.35
+							----***ToxicPuddle / lvl.50
+							
+							if UserSkill_Janitor < 10 and v.Name == "LargePuddle" then return end
+							if UserSkill_Janitor < 20 and v.Name == "NastyPuddle" then return end
+							if UserSkill_Janitor < 35 and v.Name == "OilPuddle" then return end
+							if UserSkill_Janitor < 50 and v.Name == "ToxicPuddle" then return end
+							
 							local dis = (HMNRT.Position - v.Position).Magnitude
 							if dis < NearDis then
 								NearDis = dis
