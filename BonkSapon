@@ -581,7 +581,7 @@ local function FindItem(ItemName)
 					Resut = true
 					button = v
 					print("")
-					print("**** FindItem() **** Player Have "..ItemName)
+					warn("**** FindItem() **** Player Have "..ItemName)
 					print("")
 					break
 				end
