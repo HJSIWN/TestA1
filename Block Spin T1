@@ -126,6 +126,15 @@ SomtankInfo.Name = "SomtankInfo"
 SomtankInfo_Puddles = Instance.new("Folder", SomtankInfo)
 SomtankInfo_Puddles.Name = "SomtankInfo_Puddles"
 
+VehicleBlockers = nil--Map:WaitForChild("VehicleBlockers")
+
+if getgenv().STVehicleBlockers then
+	VehicleBlockers = getgenv().STVehicleBlockers
+else
+	VehicleBlockers = workspace:WaitForChild("Map"):WaitForChild("VehicleBlockers")
+	getgenv().STVehicleBlockers = VehicleBlockers
+end
+
 if getgenv().SomtankInfoFolder then
 	SomtankInfo = getgenv().SomtankInfoFolder
 	SomtankInfo_Puddles = getgenv().SomtankInfo_Puddles_Folder
@@ -191,6 +200,14 @@ end
 
 local function IsNear(pos1, pos2, maxDist)
 	return (pos1 - pos2).Magnitude <= maxDist
+end
+
+local function RemoveNotifications()
+	for _, child in pairs(plrGui:WaitForChild("Notifications"):WaitForChild("Frame"):GetChildren()) do
+		if child:IsA("TextLabel") and child.Visible == true then
+			child:Destroy()
+		end
+	end
 end
 
 local function createPath(startPos, endPos)
@@ -379,7 +396,7 @@ local function smartWarpTo(targetPosition)
 		return false
 	end
 
-	print("Warping to: " .. tostring(targetPosition))
+	--print("Warping to: " .. tostring(targetPosition))
 
 	-- ลองวาร์ปไปเป้าหมายโดยตรง
 	local success = attemptWarp(targetPosition)
@@ -444,12 +461,6 @@ local function smartWarpTo(targetPosition)
 		Send:FireServer(CounterTable.event,"set_sprinting_1",false)
 	end)
 
-	if success then
-		print("Reached target!")
-	else
-		print("Failed to reach target")
-	end
-
 	return success
 end
 
@@ -480,12 +491,150 @@ local function sendMoneyToDiscord(player, money)
 	end)
 end
 
+local ConsumableOptionsHolder = plrGui:WaitForChild("ConsumableBuy"):WaitForChild("ConsumableOptionsHolder")
+local CategoriesFrame = ConsumableOptionsHolder:WaitForChild("CategoriesFrame")
+local ConsumableOptionsScrollingFrame = ConsumableOptionsHolder:WaitForChild("ConsumableOptionsScrollingFrame")
+local function BuyHardwareStore(ItemName)
+	local MainFrame, Resut = nil, "none"
+	if ItemName then
+		for i,v in ipairs(ConsumableOptionsScrollingFrame:GetChildren()) do
+			if v:FindFirstChild("Item") and v:FindFirstChild("Item"):FindFirstChild("Options") and v:FindFirstChild("Item"):FindFirstChild("Options"):FindFirstChild("ConsumableName") then
+				local ConsumableName = v:FindFirstChild("Item"):FindFirstChild("Options"):FindFirstChild("ConsumableName")
+				if ConsumableName and MainFrame == nil and matchesAllowedKeyword(ConsumableName.Text, {ItemName}) then
+					MainFrame = v
+				else
+					Resut = "Don't Have Item!"
+				end
+			end 
+		end
+		if MainFrame then
+			local ConsumableBuyButton = MainFrame:WaitForChild("Item"):WaitForChild("Options"):WaitForChild("ConsumableBuyButton")
+			if ConsumableBuyButton.Visible == true and ConsumableBuyButton:FindFirstChild("TextLabel") then
+				local TextLabel = ConsumableBuyButton:FindFirstChild("TextLabel")
+				if tonumber(TextLabel.ContentText:match("%d+")) and tonumber(TextLabel.ContentText:match("%d+")) <= PlayerMoney then
+					firesignal(ConsumableBuyButton.MouseButton1Click)
+					Resut = "You got "..ItemName.." !"
+				else
+					Resut = "You Don't have Money"
+				end
+			else
+				Resut = " You can't buy this!"
+			end
+		end
+	end
+	return Resut
+end
+local function CanBuyHardwareStore(ItemName)
+	local MainFrame, Resut = nil, false
+	if ItemName then
+		for i,v in ipairs(ConsumableOptionsScrollingFrame:GetChildren()) do
+			if v:FindFirstChild("Item") and v:FindFirstChild("Item"):FindFirstChild("Options") and v:FindFirstChild("Item"):FindFirstChild("Options"):FindFirstChild("ConsumableName") then
+				local ConsumableName = v:FindFirstChild("Item"):FindFirstChild("Options"):FindFirstChild("ConsumableName")
+				if ConsumableName and MainFrame == nil and matchesAllowedKeyword(ConsumableName.Text, {ItemName}) then
+					MainFrame = v
+					break
+				else
+					Resut = false
+				end
+			end 
+		end
+		if MainFrame then
+			local ConsumableBuyButton = MainFrame:WaitForChild("Item"):WaitForChild("Options"):WaitForChild("ConsumableBuyButton")
+			if ConsumableBuyButton.Visible == true and ConsumableBuyButton:FindFirstChild("TextLabel") then
+				local TextLabel = ConsumableBuyButton:FindFirstChild("TextLabel")
+				if tonumber(TextLabel.ContentText:match("%d+")) and tonumber(TextLabel.ContentText:match("%d+")) <= PlayerMoney then
+					Resut = true
+				else
+					Resut = false
+				end
+			else
+				Resut = false
+			end
+		end
+	end
+	return Resut
+end
+
+local ItemsScrollingFrame = plrGui:WaitForChild("Items"):WaitForChild("ItemsHolder"):WaitForChild("ItemsScrollingFrame")
+local ItemsCloseButton = plrGui:WaitForChild("Items"):WaitForChild("ItemsHolder"):WaitForChild("ItemsCloseButton")
+local SidebarHolderSlider = plrGui:WaitForChild("Sidebar"):WaitForChild("SidebarSlider"):WaitForChild("SidebarHolder"):WaitForChild("SidebarHolderSlider")
+local EquipItemButton = plrGui:WaitForChild("ItemInfoGui"):WaitForChild("ItemInfoHolder"):WaitForChild("PromptButtons"):WaitForChild("EquipItemButton")
+local Items = plrGui:WaitForChild("Items")
+local ItemsHolder = Items:WaitForChild("ItemsHolder")
+local InventoryButton = nil
+for i,v in ipairs(SidebarHolderSlider:GetChildren()) do
+	if v:IsA("Frame") and v:FindFirstChild("InventoryButton") then
+		InventoryButton = v:FindFirstChild("InventoryButton")
+		break
+	end
+end
+local function FindItem(ItemName)
+	Items.Enabled = false
+	firesignal(InventoryButton.MouseButton1Click)
+	local button, Resut = nil, false
+	wait(0.3)
+	if ItemName then
+		for i,v in ipairs(ItemsScrollingFrame:GetChildren()) do
+			if v:IsA("ImageButton") and v.Visible == true and v:FindFirstChild("ItemName") then
+				local ItemName_IT = v:FindFirstChild("ItemName")
+				if Resut == false and matchesAllowedKeyword(ItemName_IT.Text, {ItemName}) then
+					Resut = true
+					button = v
+					print("")
+					print("**** FindItem() **** Player Have "..ItemName)
+					print("")
+					break
+				end
+			end
+		end
+	end
+	if ItemsHolder.Visible == true then
+		repeat
+			firesignal(InventoryButton.MouseButton1Click)
+			wait(0.1)
+		until ItemsHolder.Visible == true
+	end
+	Items.Enabled = true
+	return Resut, button
+end
+local function EquipItemInInventory(ItemName)
+	local Resut = "none"
+	if ItemName then
+		local Resut, Item = FindItem(ItemName)
+		if Item then
+			firesignal(Item.MouseButton1Click)
+			wait(0.3)
+			firesignal(EquipItemButton.MouseButton1Click)
+			wait(0.3)
+			firesignal(ItemsCloseButton.MouseButton1Click)
+			Resut = "SetItemToHotBar"
+			if character:FindFirstChildOfClass("Tool") then
+				character:FindFirstChildOfClass("Tool").Parent = player.Backpack
+			end
+			if player.Backpack:FindFirstChild(ItemName) then
+				player.Backpack:FindFirstChild(ItemName).Parent = character
+				Resut = "Equipped"
+			end
+		end
+	end
+	return Resut
+end
+
 local CounterGetGC
 Map = workspace:WaitForChild("Map")
 Tiles = Map:WaitForChild("Tiles")
 
 pcall(function()
-	VehicleBlockers = Map:WaitForChild("VehicleBlockers")
+	OldCFrame = HMNRT.CFrame
+	ConsumableBuy = plrGui:WaitForChild("ConsumableBuy")
+	ConsumableBuy.Enabled = false
+	Camera.CameraType = Enum.CameraType.Scriptable
+	HMNRT.CFrame = workspace.ShopZone_Hardware.CFrame
+	wait(0.1)
+	HMNRT.CFrame = OldCFrame
+	Camera.CameraType = Enum.CameraType.Custom
+	RemoveNotifications()
+	ConsumableBuy.Enabled = true
 end)
 
 for i,v in ipairs(Map:WaitForChild("SafeZoneIndicators"):GetDescendants()) do
@@ -506,12 +655,7 @@ ProgressBarFrame = plrGui:WaitForChild("ProgressBar"):WaitForChild("ProgressBarF
 BarAmount = ProgressBarFrame:WaitForChild("MainFrame"):WaitForChild("BarAmount")
 FinishBar = ProgressBarFrame:WaitForChild("InputFrame"):WaitForChild("FinishBar")
 
---game:GetService("Players").LocalPlayer.PlayerGui.ProgressBar.ProgressBarFrame.MainFrame.BarAmount
---game:GetService("Players").LocalPlayer.PlayerGui.ProgressBar.ProgressBarFrame.InputFrame.FinishBar
 
---Player_Level = player:GetAttribute("level")
-
---workspace.Map.Tiles.GasStationTile.Quick11.Interior.Quick11Beacon.TouchPart
 
 Quick11Beacon = Tiles:WaitForChild("GasStationTile"):WaitForChild("Quick11"):WaitForChild("Interior"):WaitForChild("Quick11Beacon")
 
@@ -525,13 +669,7 @@ MoneyTextLabel = plrGui:WaitForChild("TopRightHud"):WaitForChild("Holder"):WaitF
 PlayerMoney = MoneyTextLabel.ContentText:match("%d+")
 UserHealth = humanoid.Health
 
-Janitor_LevelKill = 0
-Stamina_LevelKill = 0
-Shelf_LevelKill = 0
-Fishing_LevelKill = 0
-Farming_LevelKill = 0
-Cook_LevelKill = 0
-Swiper_LevelKill = 0
+
 
 Section = Tabs.Mode1:Section({ 
 	Title = "Section",
@@ -600,9 +738,10 @@ Tabs.Mode1:Slider({
 	Title = Translate("ความเร็วการเดินวาร์ป", "Tp walk Speed"),
 	Value = {
 		Min = 0,
-		Max = 10,
+		Max = 2,
 		Default = 1,
 	},
+	Step = 0.1,
 	Callback = function(value)
 		WalkfasterSpeed = tonumber(value)
 	end
@@ -623,42 +762,8 @@ task.spawn(function()
 	end
 end)
 
-task.spawn(function()
-	while true do
-		PlayerMoney = tonumber(MoneyTextLabel.ContentText:match("%d+"))
-		wait(1)
-		for i,v in ipairs(SkillsScrollingFrame:GetChildren()) do
-			if v:IsA("ImageButton") and v:FindFirstChild("SkillTitle") then
-				local SkillTitle = v:FindFirstChild("SkillTitle")
-				if matchesAllowedKeyword(SkillTitle.Text, {"Stamina"}) then
-					Stamina_LevelKill = tonumber(SkillTitle.Text:gsub("%D", ""))
-				elseif matchesAllowedKeyword(SkillTitle.Text, {"Fishing"}) then
-					Fishing_LevelKill = tonumber(SkillTitle.Text:gsub("%D", ""))
-				elseif matchesAllowedKeyword(SkillTitle.Text, {"Farming"}) then
-					Farming_LevelKill = tonumber(SkillTitle.Text:gsub("%D", ""))
-				elseif matchesAllowedKeyword(SkillTitle.Text, {"Swiper"}) then
-					Swiper_LevelKill = tonumber(SkillTitle.Text:gsub("%D", ""))
-				elseif matchesAllowedKeyword(SkillTitle.Text, {"Janitor"}) then
-					Janitor_LevelKill = tonumber(SkillTitle.Text:gsub("%D", ""))
-				elseif matchesAllowedKeyword(SkillTitle.Text, {"Cook"}) then
-					Cook_LevelKill = tonumber(SkillTitle.Text:gsub("%D", ""))
-				elseif matchesAllowedKeyword(SkillTitle.Text, {"Shelf Stocker"}) then
-					Shelf_LevelKill = tonumber(SkillTitle.Text:gsub("%D", ""))
-				end
-			end
-		end
-	end
-end)
-
-Section = Tabs.Mode2:Section({ 
-	Title = "Section",
-	TextXAlignment = "Left",
-	TextSize = 25,
-})
-Section:SetTitle(Translate("⚙️ ตั้งค่า", "⚙️ Setting"))
-
 PunchAura = false
-Tabs.Mode2:Toggle({
+Tabs.Mode1:Toggle({
 	Title = Translate("👊 หมัดออร่า", "👊 Punch Aura"),
 	Value = false,
 	Callback = function(state)
@@ -671,42 +776,127 @@ task.spawn(function()
 		if PunchAura then
 			for i,v in ipairs(game.Players:GetChildren()) do
 				if v ~= player and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
-					local HumanoidRootPart = v.Character:FindFirstChild("HumanoidRootPart")
-					local Dis = (HumanoidRootPart.Position - HMNRT.Position).Magnitude
-					if Dis < 10 and PunchAura then
-						WhatTool = nil
-						if not character:FindFirstChild("Fists") then
-							if character:FindFirstChildOfClass("Tool") then
-								WhatTool = character:FindFirstChildOfClass("Tool")
-								WhatTool.Parent = player.Backpack
-							end
-							if player.Backpack:FindFirstChild("Fists") then
-								local Fist = player.Backpack:FindFirstChild("Fists")
-								Fist.Parent = character
-								CounterTable = nil
-								for _, obj in ipairs(getgc(true)) do
-									if type(obj) == "table" and rawget(obj, "event") and rawget(obj, "func") then
-										CounterTable = obj
-										break
-									end
+					pcall(function()
+						if ((v.Character.HumanoidRootPart.Position - HMNRT.Position).Magnitude) < 10 and PunchAura then
+							WhatTool = nil
+							if not character:FindFirstChild("Fists") then
+								if character:FindFirstChildOfClass("Tool") then
+									WhatTool = character:FindFirstChildOfClass("Tool")
+									WhatTool.Parent = player.Backpack
 								end
-								CounterTable.event += 1
-								Send:FireServer(CounterTable.event,"melee_attack",
-									Fist,{v},CFrame.new(HumanoidRootPart.Position),0.9)
-								task.wait(0.2)
-								Fist.Parent = player.Backpack
+								if player.Backpack:FindFirstChild("Fists") then
+									local Fist = player.Backpack:FindFirstChild("Fists")
+									Fist.Parent = character
+									CounterTable = nil
+									for _, obj in ipairs(getgc(true)) do
+										if type(obj) == "table" and rawget(obj, "event") and rawget(obj, "func") then
+											CounterTable = obj
+											break
+										end
+									end
+									CounterTable.event += 1
+									Send:FireServer(CounterTable.event,"melee_attack",
+										Fist,{v},CFrame.new(v.Character.HumanoidRootPart.Position),0.9)
+									task.wait(0.2)
+									Fist.Parent = player.Backpack
+								end
+							end
+							if WhatTool then
+								WhatTool.Parent = character
 							end
 						end
-						if WhatTool then
-							WhatTool.Parent = character
-						end
-					end
+					end)
 				end
 			end
 		end
-		task.wait(0.6)
+		task.wait(0.7)
 	end
 end)
+
+Tabs.Mode1:Button({
+	Title = "BuyHardwareStore",
+	Desc = "คลิกเพื่อเซ็ท",
+	Callback = function()
+		pcall(function()
+			firesignal(InventoryButton.MouseButton1Click)
+		end)
+		WindUI:Notify({
+			Title = "คุณได้เปิดฟังชั่น",
+			Content = "ซื้อของ",
+			Duration = 5,
+		})
+	end,
+})
+
+Tabs.Mode1:Button({
+	Title = "EquipItemInInventory",
+	Desc = "คลิกเพื่อเซ็ท",
+	Callback = function()
+		pcall(function()
+			EquipItemInInventory("Bronze Mop")
+		end)
+		WindUI:Notify({
+			Title = "คุณได้เปิดฟังชั่น",
+			Content = "ซื้อของ",
+			Duration = 5,
+		})
+	end,
+})
+
+local UserSkill_Janitor = 0
+local UserSkill_Stamina = 0
+local UserSkill_Shelf = 0
+local UserSkill_Fishing = 0
+local UserSkill_Farming = 0
+local UserSkill_Cook = 0
+local UserSkill_Swiper = 0
+
+task.spawn(function()
+	while true do
+		PlayerMoney = tonumber(MoneyTextLabel.ContentText:match("%d+"))
+		wait(1)
+		for i,v in ipairs(SkillsScrollingFrame:GetChildren()) do
+			if v:IsA("ImageButton") and v:FindFirstChild("SkillTitle") then
+				local SkillTitle = v:FindFirstChild("SkillTitle")
+				if matchesAllowedKeyword(SkillTitle.Text, {"Stamina"}) then
+					UserSkill_Stamina = tonumber(SkillTitle.ContentText:match("%d+"))
+				elseif matchesAllowedKeyword(SkillTitle.Text, {"Fishing"}) then
+					UserSkill_Fishing = tonumber(SkillTitle.ContentText:match("%d+"))
+				elseif matchesAllowedKeyword(SkillTitle.Text, {"Farming"}) then
+					UserSkill_Farming = tonumber(SkillTitle.ContentText:match("%d+"))
+				elseif matchesAllowedKeyword(SkillTitle.Text, {"Swiper"}) then
+					UserSkill_Swiper = tonumber(SkillTitle.ContentText:match("%d+"))
+				elseif matchesAllowedKeyword(SkillTitle.Text, {"Janitor"}) then
+					UserSkill_Janitor = tonumber(SkillTitle.ContentText:match("%d+"))
+				elseif matchesAllowedKeyword(SkillTitle.Text, {"Cook"}) then
+					UserSkill_Cook = tonumber(SkillTitle.ContentText:match("%d+"))
+				elseif matchesAllowedKeyword(SkillTitle.Text, {"Shelf Stocker"}) then
+					UserSkill_Shelf = tonumber(SkillTitle.ContentText:match("%d+"))
+				end
+			end
+		end
+		if getgenv().ShowUserSkill and getgenv().ShowUserSkill == true then
+			print("")
+			print("************************************")
+			print("****UserSkill_Janitor : "..UserSkill_Janitor or "nil")
+			print("****UserSkill_Stamina : "..UserSkill_Stamina or "nil")
+			print("****  UserSkill_Shelf : "..UserSkill_Shelf or "nil")
+			print("****UserSkill_Farming : "..UserSkill_Farming or "nil")
+			print("****   UserSkill_Cook : "..UserSkill_Cook or "nil")
+			print("**** UserSkill_Swiper : "..UserSkill_Swiper or "nil")
+			print("************************************")
+			print("")	
+		end
+	end
+end)
+
+Section = Tabs.Mode2:Section({ 
+	Title = "Section",
+	TextXAlignment = "Left",
+	TextSize = 25,
+})
+Section:SetTitle(Translate("⚙️ ตั้งค่า", "⚙️ Setting"))
+
 Keeppeoplefromkilling = false
 Tabs.Mode2:Toggle({
 	Title = Translate("กันคนฆ่า", "Keep people from killing"),
@@ -715,6 +905,10 @@ Tabs.Mode2:Toggle({
 		Keeppeoplefromkilling = state
 		if Keeppeoplefromkilling == false then
 			UserHurt = false
+		else
+			humanoid.Health = humanoid.Health - 1
+			wait(0.1)
+			humanoid.Health = humanoid.MaxHealth
 		end
 	end
 })
@@ -729,30 +923,31 @@ Tabs.Mode2:Toggle({
 local Send = game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Send")
 task.spawn(function()
 	local HealthBar = plrGui:WaitForChild("TopRightHud"):WaitForChild("Holder"):WaitForChild("HealthBar"):WaitForChild("Fill")
-	local SafeCFrame = nil
-	humanoid.Health = 0
-	wait(1)
-	humanoid.Health = humanoid.MaxHealth
+	local SafeCFrame, StuckSafeMode = nil, 0
 	while true do
 		wait(1)
 		if Keeppeoplefromkilling and HealthBar then
-			if HealthBar.Size.X.Scale < 0.9 then
+			if HealthBar.Size.X.Scale < 0.7 then
 				UserHurt = true
 				Notifications.Enabled = false
 				repeat
-					if SafeCFrame == nil then
-						SafeCFrame = HMNRT.CFrame
-					else
+					StuckSafeMode = StuckSafeMode + 0.02
+					if SafeCFrame then
 						HMNRT.CFrame = SafeCFrame * CFrame.new(0,-10,0)
 					end
-					task.wait(0.01)
-				until HealthBar.Size.X.Scale > 0.9 or Keeppeoplefromkilling == false
-				for i=1,10 do
-					HMNRT.CFrame = SafeCFrame * CFrame.new(0,15,0)
-					wait()
+					task.wait(0.02)
+				until HealthBar.Size.X.Scale > 0.7 or Keeppeoplefromkilling == false or StuckSafeMode >= 50
+				RemoveNotifications()
+				if SafeCFrame then
+					for i=1,10 do
+						HMNRT.CFrame = SafeCFrame * CFrame.new(0,15,0)
+						wait()
+					end
 				end
 				Notifications.Enabled = true
 				UserHurt = false
+			else
+				SafeCFrame = HMNRT.CFrame
 			end
 		end
 		if AutoReSpawn and HealthBar.Size.X.Scale < 0.1 then
@@ -764,13 +959,36 @@ task.spawn(function()
 				end
 			end
 			CounterTable.event += 1
-			local args_respawn = {
-				CounterTable.event,
-				"death_screen_request_respawn"}
-			Send:FireServer(unpack(args_respawn))
+			Send:FireServer(CounterTable.event,"death_screen_request_respawn")
+			task.wait(0.5)
+			humanoid.Health = humanoid.Health - 1
+			wait(0.1)
+			humanoid.Health = humanoid.MaxHealth
 		end
 	end
 end)
+
+Change_Job_Tool_Level = false
+Tabs.Mode2:Toggle({
+	Title = Translate("🔄 เปลี่ยนอุปกรตามเลเวลงาน", "🔄 Change equipment according to job level"),
+	Value = true,
+	Callback = function(state) 
+		Change_Job_Tool_Level = state
+		if Change_Job_Tool_Level == true then
+			WindUI:Notify({
+				Title = "คุณได้เปิดฟังชั่น",
+				Content = "เปลี่ยนอุปกรตามเลเวลงาน",
+				Duration = 5,
+			})
+		else
+			WindUI:Notify({
+				Title = "คุณได้ปิดฟังชั่น",
+				Content = "เปลี่ยนอุปกรตามเลเวลงาน",
+				Duration = 5,
+			})
+		end
+	end
+})
 
 Section = Tabs.Mode2:Section({ 
 	Title = "Section",
@@ -811,6 +1029,10 @@ local HowNearATM = math.huge
 local AreaPart = nil
 local SurfaceGuiATM = nil
 local function NearATM()
+	ATMNear = nil
+	HowNearATM = math.huge
+	AreaPart = nil
+	SurfaceGuiATM = nil
 	for i,v in ipairs(ATMs:GetChildren()) do
 		if v:FindFirstChild("Area") then
 			local Area = v:FindFirstChild("Area")
@@ -834,11 +1056,12 @@ local function NearATM()
 	return HowNearATM, ATMNear, AreaPart, SurfaceGuiATM
 end
 
+local Get = game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Get")
 local function GotoNearATM()
 	local GoFinish = false
 	repeat
 		local HowNearATM, ATMNear, AreaPart, SurfaceGuiATM = NearATM()
-		if AreaPart and SurfaceGuiATM then
+		if AreaPart and SurfaceGuiATM and GoFinish == false then
 			local targetPosition = AreaPart.Position + Vector3.new(0,-4,0)
 			UsePathFinding = true
 			character = player.Character
@@ -973,7 +1196,6 @@ local function GotoNearATM()
 						2,
 						math.random(-6, 6)
 						), 3)
-
 					for _, escapePos in ipairs(escapeSteps) do
 						if UsePathFinding == false then break end
 						if UserHurt == true then break end
@@ -982,9 +1204,6 @@ local function GotoNearATM()
 						wait(0.12)
 					end
 				end
-			end
-			if IsNear(HMNRT.Position, targetPosition, 5) then
-				GoFinish = true
 			end
 			pcall(function()
 				CounterTable = nil
@@ -997,22 +1216,9 @@ local function GotoNearATM()
 				CounterTable.event += 1
 				Send:FireServer(CounterTable.event,"set_sprinting_1",false)
 			end)
-		end
-	until GoFinish == true
-end
-
-local Get = game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Get")
-task.spawn(function()
-	while true do
-		if AutoDepositMoney == true then
-			if PlayerMoney >= DepositMoneyWhen then
-				Depositing = true
-				UsePathFinding = false
-				task.wait(2)
-				
+			if IsNear(HMNRT.Position, targetPosition, 5) then
+				GoFinish = true
 				repeat
-					local GotoATM = GotoNearATM()
-					
 					for _, obj in ipairs(getgc(true)) do
 						if type(obj) == "table" and rawget(obj, "event") and rawget(obj, "func") then
 							CounterGetGC = obj
@@ -1021,7 +1227,6 @@ task.spawn(function()
 					end
 					CounterGetGC.func += 1
 					Get:InvokeServer(CounterGetGC.func, "transfer_funds", "hand", "bank", DepositMoneyWhen)
-
 					if PlayerMoney < DepositMoneyWhen then
 						WindUI:Notify({
 							Title = "ฝากเงินสำเร็จ",
@@ -1031,6 +1236,24 @@ task.spawn(function()
 						sendMoneyToDiscord(player.Name, DepositMoneyWhen)
 					end
 					task.wait(0.5)
+				until PlayerMoney < DepositMoneyWhen or UserHurt == true
+			end
+		end
+		task.wait()
+	until GoFinish == true
+end
+
+task.spawn(function()
+	while true do
+		if AutoDepositMoney == true then
+			if PlayerMoney >= DepositMoneyWhen then
+				Depositing = true
+				UsePathFinding = false
+				task.wait(1)
+				UsePathFinding = false
+				repeat
+					local GotoATM = GotoNearATM()
+					task.wait(1)
 				until PlayerMoney < DepositMoneyWhen or UserHurt == true
 				Depositing = false
 			end
@@ -1046,6 +1269,7 @@ Section = Tabs.Mode2:Section({
 	TextSize = 25,
 })
 Section:SetTitle(Translate("🥩 ออโต้ทำงานร้านอาหาร", "🥩 Auto working restaurant"))
+
 
 Cook_Farm = false
 Tabs.Mode2:Toggle({
@@ -1082,20 +1306,66 @@ Tabs.Mode2:Toggle({
 	end
 })
 task.spawn(function()
-	local StuckCook = 0
+	local StuckCook, CanCheckTool = 0, true
 	local Fridge = Map:WaitForChild("Tiles"):WaitForChild("ShoppingTile"):WaitForChild("SteakHouse"):WaitForChild("Interior"):WaitForChild("Fridge")
 	local Area = Fridge:WaitForChild("Area")
 	local SteakHouseBeacon = Map:WaitForChild("Tiles"):WaitForChild("ShoppingTile"):WaitForChild("SteakHouse"):WaitForChild("Interior"):WaitForChild("SteakHouseBeacon")
-	
+		
 	for i,v in ipairs(Fridge:GetDescendants()) do
 		if v.Name == "Base" and v:FindFirstChild("Attachment") and v:FindFirstChild("Attachment"):FindFirstChild("ProximityPrompt") then
 			Fridge = v:FindFirstChild("Attachment"):FindFirstChild("ProximityPrompt")
 			break
 		end
 	end
+	
+	local function EquiNewJobTool()
+		if not Change_Job_Tool_Level then return end
+		if UserSkill_Cook >= 10 and UserSkill_Cook < 25 then
+			--print("***** Player Level > 10 ")
+			local BronzeSkillet = FindItem("BronzeSkillet")
+			if BronzeSkillet == false then
+				--print("***** Player Don't have Bronze Skillet ")
+				if CanBuyHardwareStore("Bronze Skillet") then
+					--print("***** Player Can buy Bronze Skillet / Goto Shop! ")
+					local smartWalkToJobBegin =	smartWarpTo(workspace.ShopZone_Hardware.Position + Vector3.new(0,-2,0))
+					if IsNear(HMNRT.Position, workspace.ShopZone_Hardware.Position, 5) then
+						BuyHardwareStore("Bronze Skillet")
+					end
+				end
+			end
+		elseif UserSkill_Cook >= 25 and UserSkill_Cook < 40 then
+			--print("***** Player Level > 25 ")
+			local SilverSkillet = FindItem("SilverSkillet")
+			if SilverSkillet == false then
+				--print("***** Player Don't have SilverSkillet ")
+				if CanBuyHardwareStore("Silver Skillet") then
+					--print("***** Player Can buy SilverSkillet / Goto buy")
+					local smartWalkToJobBegin =	smartWarpTo(workspace.ShopZone_Hardware.Position + Vector3.new(0,-2,0))
+					if IsNear(HMNRT.Position, workspace.ShopZone_Hardware.Position, 5) then
+						BuyHardwareStore("Silver Skillet")
+					end
+				end
+			end
+		elseif UserSkill_Cook >= 40 then
+			--print("***** Player Level > 40 ")
+			local GoldenSkillet = FindItem("GoldenSkillet")
+			if GoldenSkillet == false then
+				--print("***** Player con't have GoldenSkillet ")
+				if CanBuyHardwareStore("Golden Skillet") then
+					--print("***** Player Can buy GoldenSkillet / Goto buy")
+					local smartWalkToJobBegin =	smartWarpTo(workspace.ShopZone_Hardware.Position + Vector3.new(0,-2,0))
+					if IsNear(HMNRT.Position, workspace.ShopZone_Hardware.Position, 5) then
+						BuyHardwareStore("Golden Skillet")
+					end
+				end
+			end
+		end
+	end
 
 	while true do
 		if Cook_Farm then
+			EquiNewJobTool()
+			
 			if player:GetAttribute("Job") ~= "steakhouse_cook" then
 				if Depositing == true or UserHurt == true then
 					repeat
@@ -1124,14 +1394,21 @@ task.spawn(function()
 					Duration = 5,
 				})
 			else
+				
+				if Depositing == true or UserHurt == true then
+					repeat
+						task.wait(0.5)
+					until Depositing == false and UserHurt == false
+				end
+				
 				repeat
+					if CanCheckTool == false then
+						EquiNewJobTool()
+						CanCheckTool = true
+					end
+					
 					if JobApplicationFrame.Visible == true then
 						JobApplicationFrame.Visible = false
-					end
-					if Depositing == true or UserHurt == true then
-						repeat
-							task.wait(0.5)
-						until Depositing == false and UserHurt == false
 					end
 					
 					local smartWalkToJobBegin =	smartWarpTo(Area.Position + Vector3.new(0,-4,2))
@@ -1181,6 +1458,7 @@ task.spawn(function()
 										until BarAmount.Size.X.Scale > 0.94 or StuckCook >= 11
 										pcall(function()
 											firesignal(FinishBar.MouseButton1Click)
+											CanCheckTool = false
 										end)
 									until ProgressBarFrame.Visible == false or player:GetAttribute("Job") ~= "shelf_stocker" 
 										or Depositing == true or UserHurt == true
@@ -1377,12 +1655,11 @@ Section = Tabs.Mode2:Section({
 })
 Section:SetTitle(Translate("🧹 ออโต้ทำงานถูพื้น", "🧹 Auto floor mopping"))
 
-NameNeedMob = { "SmallPuddle" }
+NameNeedMob = {"SmallPuddle"}
 Tabs.Mode2:Dropdown({
-	Title = Translate("แอ่งน้ำที่ต้องการถู", "The puddle that needs to be mopped"),
-	Values = { "SmallPuddle", "LargePuddle", "NastyPuddle"
-		, "OilPuddle", "ToxicPuddle",},
-	Value = { "SmallPuddle" },
+	Title = Translate("แอ่งน้ำที่อนุญาตให้ถู", "Puddles where mopping is allowed"),
+	Values = {"SmallPuddle", "LargePuddle", "NastyPuddle", "OilPuddle", "ToxicPuddle"},
+	Value = {"SmallPuddle", "LargePuddle", "NastyPuddle", "OilPuddle", "ToxicPuddle"},
 	Multi = true,
 	AllowNone = true,
 	Callback = function(option) 
@@ -1483,6 +1760,17 @@ task.spawn(function()
 					
 					for i,v in ipairs(Puddles:GetChildren()) do
 						if v.Size.X > 4 and matchesAllowedKeyword(v.Name, NameNeedMob) then
+							----***LargePuddle / lvl.10
+							----*Bronze Mop / lvl.10
+							----***NastyPuddle / lvl.20
+							----*Silver Mop / lvl.25
+							----***OilPuddle / lvl.35
+							----*Golden Mop / lvl.40
+							----***ToxicPuddle / lvl.50
+							----*Diamon Mop / lvl.55
+							if UserSkill_Janitor > 10 then
+								
+							end
 							local dis = (HMNRT.Position - v.Position).Magnitude
 							if dis < NearDis then
 								NearDis = dis
