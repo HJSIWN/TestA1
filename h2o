@@ -47,7 +47,7 @@ if jsonData then
       local HttpService = game:GetService("HttpService")
       local Setting_Farm = ']] .. jsonData .. [['
       getgenv().Setting = HttpService:JSONDecode(Setting_Farm)
-      loadstring(game:HttpGet("https://raw.githubusercontent.com/HJSIWN/BoaYoga/refs/heads/main/nk-hz"))()
+      loadstring(game:HttpGet("https://raw.githubusercontent.com/HJSIWN/TestA1/refs/heads/main/h2o"))()
     ]])
 end
 
