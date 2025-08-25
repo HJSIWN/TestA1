@@ -64,6 +64,17 @@ plrGui = player.PlayerGui
 ScreenGui, Icon_Position, ScriptIsRunning, LoadConfig = Instance.new("ScreenGui", CoreGui), nil, true, true
 
 task.spawn(function()
+	while true do
+		task.wait(1)
+		pcall(function()
+			character = game.Players.LocalPlayer.Character
+			humanoid = character:FindFirstChild("Humanoid")
+			HMNRT = character:FindFirstChild("HumanoidRootPart")
+		end)
+	end
+end)
+
+task.spawn(function()
 	pcall(function()
 		if game:GetService("ReplicatedStorage"):FindFirstChild("Packets"):FindFirstChild("RequestDailyReward") then
 			game:GetService("ReplicatedStorage"):WaitForChild("Packets"):WaitForChild("RequestDailyReward"):InvokeServer()
@@ -155,7 +166,7 @@ end
 local Window = WindUI:CreateWindow({
 	Title = "Somtank",
 	Icon = "rbxassetid://80019916158199",
-	Author = "v0.0.5 | credit. Daytoday2044 / Driver",
+	Author = "v0.0.6 | credit. Daytoday2044 / Driver",
 	Folder = "SOMTANK",
 	Size = UDim2.fromOffset(460, 320),
 	Transparent = true,
@@ -983,6 +994,7 @@ task.spawn(function()-- Create Room
 end)
 
 task.spawn(function()-- Inf_PerkSkill
+	if tonumber(game.PlaceId) == tonumber(103754275310547) then return end
 	local ByteNetReliable = game:GetService("ReplicatedStorage"):WaitForChild("ByteNetReliable")
 	while true do
 		if Inf_PerkSkill then
@@ -996,7 +1008,7 @@ task.spawn(function()-- Inf_PerkSkill
 end)
 
 task.spawn(function()-- Door
-
+	if tonumber(game.PlaceId) == tonumber(103754275310547) then return end
 	local Doors = nil
 
 	if workspace:FindFirstChild("School") then
@@ -1029,7 +1041,7 @@ task.spawn(function()-- Door
 end)
 
 task.spawn(function()-- Auto Skill
-	
+	if tonumber(game.PlaceId) == tonumber(103754275310547) then return end
 	local ByteNetReliable = game:GetService("ReplicatedStorage"):WaitForChild("ByteNetReliable")
 	local MainScreen = plrGui:WaitForChild("MainScreen")	
 	local Perk_Bar = MainScreen:WaitForChild("LeftSide"):WaitForChild("PlayerHUD"):WaitForChild("Bars"):WaitForChild("Perk"):WaitForChild("Fill")
@@ -1093,6 +1105,7 @@ task.spawn(function()-- Auto Skill
 end)
 
 task.spawn(function()-- Auto Collet Item
+	if tonumber(game.PlaceId) == tonumber(103754275310547) then return end
 	local DropItems = workspace:WaitForChild("DropItems")
 	while true do
 		if AutoColletDropItem then
@@ -1115,7 +1128,8 @@ task.spawn(function()-- Auto Collet Item
 	end
 end)
 
-task.spawn(function()
+task.spawn(function()-- Zombies Farm
+	if tonumber(game.PlaceId) == tonumber(103754275310547) then return end
 	local Entities, Stage, WantHeli, Map = workspace:WaitForChild("Entities"), "none", 0, "School"
 	local RadioObjective, HeliObjective, generator = nil, nil, nil
 
@@ -1320,6 +1334,7 @@ task.spawn(function()
 end)
 
 task.spawn(function()-- Auto Kill
+	if tonumber(game.PlaceId) == tonumber(103754275310547) then return end
 	local ByteNetReliable = game:GetService("ReplicatedStorage"):WaitForChild("ByteNetReliable")
 	while true do
 		if ZombieFarm or AutoKill then
@@ -1378,11 +1393,6 @@ while true do
 			wait(10)
 		end
 		task.wait(2)
-		player = game.Players.LocalPlayer
-		character = player.Character
-		humanoid = character:FindFirstChildOfClass("Humanoid")
-		HMNRT = character:WaitForChild("HumanoidRootPart")
-		plrGui = player.PlayerGui
 		if (HMNRT.Position - lastPos).magnitude < 0.1 then
 			afkTime += 1.5
 			if ZombieFarm and afkTime >= afkThreshold then
