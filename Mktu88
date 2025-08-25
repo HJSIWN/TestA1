@@ -1,0 +1,1358 @@
+
+repeat wait(1) until game:IsLoaded()
+repeat wait(1) until game.Players.LocalPlayer and game.Players.LocalPlayer.Character
+
+if getgenv().SomtankIsRun then return end
+getgenv().SomtankIsRun = true
+
+local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
+
+HttpService = game:GetService("HttpService")
+PathfindingService = game:GetService("PathfindingService")
+TweenService = game:GetService("TweenService")
+RunService = game:GetService("RunService")
+Lighting = game:GetService("Lighting")
+replicatedStorage = game:GetService("ReplicatedStorage")
+CoreGui = game:GetService("CoreGui")
+UIS = game:GetService("UserInputService")
+
+----------------------------------------------------
+local jsonData = nil
+
+if getgenv().Setting then
+	print("[[[[[[[[[[ Found - getgenv().Setting ]]]]]]]]]]")
+	for k, v in pairs(getgenv().Setting) do
+		print("************* "..k, v)
+	end
+	print("***********************************************")
+	jsonData = HttpService:JSONEncode(getgenv().Setting)
+else
+	getgenv().Setting = {
+		Map = "Sewers",-- [ School / Sewers ]
+		Difficulty = "Normal",-- [ Normal / Hard  / Nightmare ]
+		Mode = "None",-- [ None / Campain  / Endless ]
+		Language = "English",--[ Thai / English ]
+		Farm_Mode = ""--[ Kai_tan = Farm ] 15fps )
+	}
+	print("[[[[[[[[[[ Set - getgenv().Setting ]]]]]]]]]]")
+	for k, v in pairs(getgenv().Setting) do
+		print("************* "..k, v)
+	end
+	print("***********************************************")
+	jsonData = HttpService:JSONEncode(getgenv().Setting)
+end
+
+if jsonData then
+	queue_on_teleport([[
+      local HttpService = game:GetService("HttpService")
+      local Setting_Farm = ']] .. jsonData .. [['
+      getgenv().Setting = HttpService:JSONDecode(Setting_Farm)
+      loadstring(game:HttpGet("https://raw.githubusercontent.com/HJSIWN/BoaYoga/refs/heads/main/Mktu88"))()
+    ]])
+end
+
+-----------------------------------------------------
+
+player = game.Players.LocalPlayer
+character = player.Character
+humanoid = character:FindFirstChildOfClass("Humanoid")
+HMNRT = character:WaitForChild("HumanoidRootPart")
+Camera = workspace.CurrentCamera
+screenSize = Camera.ViewportSize
+plrGui = player.PlayerGui
+
+ScreenGui, Icon_Position, ScriptIsRunning, LoadConfig = Instance.new("ScreenGui", CoreGui), nil, true, true
+BlackScreen, ShowText = false, nil 
+
+task.spawn(function()
+	while true do
+		task.wait(1)
+		pcall(function()
+			character = game.Players.LocalPlayer.Character
+			humanoid = character:FindFirstChild("Humanoid")
+			HMNRT = character:FindFirstChild("HumanoidRootPart")
+			plrGui = game.Players.LocalPlayer.PlayerGui
+			if BlackScreen == false then
+				ShowText = nil
+				if plrGui:FindFirstChild("SomtankBlackSgreen") then
+					plrGui:FindFirstChild("SomtankBlackSgreen"):Destroy()
+				end
+				Camera.CameraType = Enum.CameraType.Custom
+			else
+				if not plrGui:FindFirstChild("SomtankBlackSgreen") then
+					NewScreenGui = Instance.new("ScreenGui", plrGui)
+					NewCanvas = Instance.new("CanvasGroup", NewScreenGui)
+					NewTextLabel = Instance.new("TextLabel", NewScreenGui)
+					NewCanvas.Position = UDim2.new(0, 0, -0.2, 0)
+					NewCanvas.Size = UDim2.new(2, 0, 2, 0)
+					NewCanvas.BackgroundColor3 = Color3.new(0, 0, 0)
+					NewTextLabel.Position = UDim2.new(0, 0, 0, 0)
+					NewTextLabel.Size = UDim2.new(1, 0, 1, 0)
+					NewTextLabel.BackgroundTransparency = 1
+					NewTextLabel.TextColor3 = Color3.new(1, 1, 1)
+					NewTextLabel.TextScaled = true
+					NewTextLabel.ZIndex = 9
+					NewTextLabel.Text = "Hello World"
+					NewScreenGui.Name = "SomtankBlackSgreen"
+					ShowText = NewTextLabel
+				end
+				local cameraPos = HMNRT.Position + Vector3.new(0, 10, 0)
+				local lookAtPos = cameraPos + Vector3.new(0, 100, 0)
+				Camera.CameraType = Enum.CameraType.Scriptable
+				Camera.CFrame = CFrame.new(cameraPos, lookAtPos)
+			end
+		end)
+	end
+end)
+
+task.spawn(function()
+	pcall(function()
+		if game:GetService("ReplicatedStorage"):FindFirstChild("Packets"):FindFirstChild("RequestDailyReward") then
+			game:GetService("ReplicatedStorage"):WaitForChild("Packets"):WaitForChild("RequestDailyReward"):InvokeServer()
+			firesignal(plrGui.GUI.DailyRewards.Banner.ExitButton.MouseButton1Click)
+		end
+		local codes_Lobby = {"100KLIKES","20KIN","70KLIKES","60KLIKES","sorryfordelay"}
+		local redeem = game:GetService("ReplicatedStorage"):WaitForChild("Packets"):WaitForChild("RedeemCode")
+		for _, code in ipairs(codes_Lobby) do
+			redeem:InvokeServer(code)
+		end
+	end)
+end)
+
+local function MakeDraggableButton(button: ImageButton, MoveFrame)
+	local dragging, dragStart, firstPos, startPos = false, nil, nil, nil
+	button.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = true
+			dragStart = input.Position
+			Icon_Position = button.Position
+			startPos = MoveFrame.Position
+			if not firstPos then
+				firstPos = MoveFrame.Position
+			end
+		end
+	end)
+	UIS.InputChanged:Connect(function(input)
+		if dragging and (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement) then
+			local delta = input.Position - dragStart
+			MoveFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+		end
+	end)
+	UIS.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = false
+		end
+	end)
+end
+local function MakeImageButton(Parent, Size, Posi, BGtran, Color, Imtran, imageID)
+	local NewFrame = Instance.new("ImageButton", Parent)
+	local UICorner = Instance.new("UICorner", NewFrame)
+	NewFrame.Position = Posi
+	NewFrame.Size = Size
+	NewFrame.BackgroundTransparency = BGtran
+	NewFrame.Image = imageID or ""
+	NewFrame.ImageTransparency = Imtran
+	NewFrame.BackgroundColor3 = Color
+	NewFrame.ImageColor3 = Color
+	NewFrame.ZIndex = 2
+	return NewFrame
+end
+MoveIcon = MakeImageButton(ScreenGui, UDim2.new(0, 53,0, 51), UDim2.new(0.100, 0,0.447, 0), 1, Color3.new(1, 1, 1), 0, "rbxassetid://81129676934693")
+FOR_MoveIcon = Instance.new("UIAspectRatioConstraint", MoveIcon)
+MakeDraggableButton(MoveIcon, MoveIcon)
+
+function gradient(text, startColor, endColor)
+	local result = ""
+	local length = #text
+	for i = 1, length do
+		local t = (i - 1) / math.max(length - 1, 1)
+		local r = math.floor((startColor.R + (endColor.R - startColor.R) * t) * 255)
+		local g = math.floor((startColor.G + (endColor.G - startColor.G) * t) * 255)
+		local b = math.floor((startColor.B + (endColor.B - startColor.B) * t) * 255)
+		local char = text:sub(i, i)
+		result = result .. "<font color=\"rgb(" .. r ..", " .. g .. ", " .. b .. ")\">" .. char .. "</font>"
+	end
+	return result
+end
+
+if getgenv().MainButton677 then
+	getgenv().MainButton677:Destroy()
+	getgenv().MainButton677 = ScreenGui
+else
+	getgenv().MainButton677 = ScreenGui
+end
+
+local function Translate(ThaiLang, EngLang)
+	local Resut = ThaiLang
+	if getgenv().Setting and getgenv().Setting.Language then
+		if getgenv().Setting.Language == "Thai" then
+			Resut = ThaiLang
+		elseif getgenv().Setting.Language == "English" then
+			Resut = EngLang
+		end
+	end
+	return Resut
+end
+
+local Window = WindUI:CreateWindow({
+	Title = "Somtank",
+	Icon = "rbxassetid://80019916158199",
+	Author = "v0.0.6 | credit. Daytoday2044 / Driver",
+	Folder = "SOMTANK",
+	Size = UDim2.fromOffset(460, 320),
+	Transparent = true,
+	Theme = "Violet",
+	User = {Enabled = true,Callback = function() end,Anonymous = false},
+	SideBarWidth = 200,
+	ScrollBarEnabled = true
+})
+
+WindUI.TransparencyValue = 0.1
+
+OpenMainFrame = false
+MoveIcon.Activated:Connect(function()
+	if Icon_Position == MoveIcon.Position then
+		OpenMainFrame = not OpenMainFrame
+		if OpenMainFrame == false then
+			Window:Open()
+		else
+			Window:Close()
+		end
+	end
+end)
+
+local ConfigManager = Window.ConfigManager
+local myConfig = ConfigManager:CreateConfig("HuntyZombies")
+
+local Tabs = {}
+
+do
+	Tabs.Player = Window:Section({
+		Title = "กลุ่ม 1",
+		Opened = true,
+	})
+
+	Tabs.Mode1 = Tabs.Player:Tab({ Title = Translate("ผู้เล่น", "Player"), Icon = "rbxassetid://2795572800" })
+
+	Tabs.Mode2 = Tabs.Player:Tab({ Title = Translate("ฟาร์ม", "Farm"), Icon = "rbxassetid://9008236330" })
+
+	Tabs.Mode3 = Tabs.Player:Tab({ Title = Translate("สุ่ม", "Spin"), Icon = "rbxassetid://438217404" })
+
+end
+
+Window:SelectTab(1)
+
+local function matchesAllowedKeyword(value, allowedKeywords)
+	value = value:lower()
+	for _, keyword in ipairs(allowedKeywords) do
+		if string.find(value, keyword:lower()) then
+			return true
+		end
+	end
+	return false
+end
+
+local function IsNear(pos1, pos2, maxDist)
+	return (pos1 - pos2).Magnitude <= maxDist
+end
+
+local originalCanCollideMap, NoclipConnection = {}, nil
+function noclip()
+	if NoclipConnection then NoclipConnection:Disconnect() end
+	NoclipConnection = RunService.Stepped:Connect(function()
+		if character and character:IsDescendantOf(workspace) then
+			for _, part in ipairs(character:GetDescendants()) do
+				if part:IsA("BasePart") and part.CanCollide == true then
+					if originalCanCollideMap[part] == nil then
+						originalCanCollideMap[part] = true
+					end
+					part.CanCollide = false
+				end
+			end
+		end
+	end)
+end
+function clip()
+	if NoclipConnection then
+		NoclipConnection:Disconnect()
+		NoclipConnection = nil
+	end
+	for part, wasCollidable in pairs(originalCanCollideMap) do
+		if wasCollidable and part and part:IsA("BasePart") then
+			part.CanCollide = true
+		end
+	end
+	originalCanCollideMap = {}
+end
+
+Section = Tabs.Mode3:Section({ 
+	Title = "Section",
+	TextXAlignment = "Left",
+	TextSize = 25,
+})
+Section:SetTitle(Translate("⚔️ สุ่มหาอาวุธ", "⚔️ Random find Weapon"))
+
+Choose_Target_Weapon = "KATANA"
+Dropdown_Choose_Target_Weapon = Tabs.Mode3:Dropdown({
+	Title = Translate("อาวุธที่อยากได้", "Target Weapon"),
+	Values = { "BASEBALL", "AXES", "GUITAR", "DUAL GUN", "KATANA", "GREATSWORD" },
+	Value = "KATANA",
+	Callback = function(option) 
+		Choose_Target_Weapon = option
+	end
+})
+
+--"Baseball", "Axes", "Guitar", "Dual gun", "Katana", "Greatsword"
+
+Auto_Random_Find_Weapon = false
+Tabs.Mode3:Toggle({
+	Title = Translate("ออโต้สุ่มหาอาวุธ", "Auto Random Find Weapon"),
+	Value = false,
+	Callback = function(state)
+		Auto_Random_Find_Weapon = state
+	end
+})
+
+Auto_Random_Find_Weapon_Lucky = false
+Tabs.Mode3:Toggle({
+	Title = Translate("ออโต้สุ่มหาอาวุธลัคกี้", "Auto Random Find Weapon Lucky"),
+	Value = false,
+	Callback = function(state)
+		Auto_Random_Find_Weapon_Lucky = state
+	end
+})
+
+Section = Tabs.Mode3:Section({ 
+	Title = "Section",
+	TextXAlignment = "Left",
+	TextSize = 25,
+})
+Section:SetTitle(Translate("🔮 สุ่มหาความสามารถ", "🔮 Random find Perk"))
+
+Choose_Target_Perk = "VAMPIRE"
+Dropdown_Choose_Target_Perk = Tabs.Mode3:Dropdown({
+	Title = Translate("สามารถที่อยากได้", "Target Perk"),
+	Values = { "BERSERKER", "HEALER", "FLAME", "CRITICAL", "UNDEAD", "Vampire" },
+	Value = "VAMPIRE",
+	Callback = function(option) 
+		Choose_Target_Perk = option
+	end
+})
+
+--"Berserker", "Healer", "Flame", "Critical", "Undead", "Vampire"
+
+Auto_Random_Find_Perk = false
+Tabs.Mode3:Toggle({
+	Title = Translate("ออโต้สุ่มหาสามารถ", "Auto Random Find Perk"),
+	Value = false,
+	Callback = function(state)
+		Auto_Random_Find_Perk = state
+	end
+})
+
+Auto_Random_Find_Perk_Lucky = false
+Tabs.Mode3:Toggle({
+	Title = Translate("ออโต้สุ่มหาสามารถลัคกี้", "Auto Random Find Perk Lucky"),
+	Value = false,
+	Callback = function(state)
+		Auto_Random_Find_Perk_Lucky = state
+	end
+})
+
+Section = Tabs.Mode1:Section({ 
+	Title = "Section",
+	TextXAlignment = "Left",
+	TextSize = 25,
+})
+Section:SetTitle(Translate("ตั้งค่าผู้เล่น", "Player Setting"))
+
+pcall(function()
+	
+	Tabs.Mode1:Slider({
+		Title = Translate("ความเร็วการเดิน", "WalkSpeed"),
+		Value = {
+			Min = 0,
+			Max = 300,
+			Default = 16,
+		},
+		Callback = function(value)
+			pcall(function()
+				humanoid.WalkSpeed = tonumber(value)
+			end)
+		end
+	})
+
+	Tabs.Mode1:Slider({
+		Title = Translate("พลังการกระโดด", "Jump Power"),
+		Value = {
+			Min = 0,
+			Max = 50,
+			Default = 7.2,
+		},
+		Step = 0.5,
+		Callback = function(value)
+			pcall(function()
+				humanoid.JumpHeight = value
+			end)
+		end
+	})
+	
+end)
+
+AutoKill = false
+Tabs.Mode1:Toggle({
+	Title = Translate("คิลออร่า", "Kill Aura"),
+	Value = false,
+	Callback = function(state)
+		AutoKill = state
+	end
+})
+
+Fps_Value = 60
+Slider_Fps_Value = Tabs.Mode1:Slider({
+	Title = Translate("เซ็ทค่า fps", "Set Fps"),
+	Value = {
+		Min = 0,
+		Max = 120,
+		Default = 60,
+	},
+	Callback = function(value)
+		pcall(function()
+			Fps_Value = tonumber(value)
+			setfpscap(Fps_Value)
+		end)
+	end
+})
+
+Tabs.Mode1:Button({
+	Title = Translate("กลับไปล็อบบี้", "Teleport to Lobby"),
+	Desc = Translate("คลิกเพื่อเทเลพอร์ท", "Click to Teleport"),
+	Callback = function()
+		game:GetService("TeleportService"):Teleport(103754275310547, game.Players.LocalPlayer)
+	end,
+})
+
+Inf_PerkSkill = false
+Toggle_Inf_PerkSkill = Tabs.Mode1:Toggle({
+	Title = Translate("ใช้สกิลความสามารถพิเศษ ( ในเกม )", "Inf Perk ( In game )"),
+	Value = false,
+	Callback = function(state)
+		Inf_PerkSkill = state
+	end
+})
+
+Section = Tabs.Mode2:Section({ 
+	Title = "Section",
+	TextXAlignment = "Left",
+	TextSize = 25,
+})
+Section:SetTitle(Translate("⚙️ ตั้งค่าการฟาร์ม", "⚙️ Farm Setting"))
+
+Toggle_BlackScreen = Tabs.Mode2:Toggle({
+	Title = Translate("จอดำ", "Black Screen"),
+	Value = false,
+	Callback = function(state)
+		BlackScreen = state
+		if BlackScreen == false then
+			ShowText = nil
+			if plrGui:FindFirstChild("SomtankBlackSgreen") then
+				plrGui:FindFirstChild("SomtankBlackSgreen"):Destroy()
+			end
+		else
+			if not plrGui:FindFirstChild("SomtankBlackSgreen") then
+				NewScreenGui = Instance.new("ScreenGui", plrGui)
+				NewCanvas = Instance.new("CanvasGroup", NewScreenGui)
+				NewTextLabel = Instance.new("TextLabel", NewScreenGui)
+				NewCanvas.Position = UDim2.new(0, 0, -0.2, 0)
+				NewCanvas.Size = UDim2.new(2, 0, 2, 0)
+				NewCanvas.BackgroundColor3 = Color3.new(0, 0, 0)
+				NewTextLabel.Position = UDim2.new(0, 0, 0, 0)
+				NewTextLabel.Size = UDim2.new(1, 0, 1, 0)
+				NewTextLabel.BackgroundTransparency = 1
+				NewTextLabel.TextColor3 = Color3.new(1, 1, 1)
+				NewTextLabel.TextScaled = true
+				NewTextLabel.ZIndex = 9
+				NewTextLabel.Text = "Hello World"
+				NewScreenGui.Name = "SomtankBlackSgreen"
+				ShowText = NewTextLabel
+			end
+		end
+	end
+})
+
+ZombieFarm = false
+Toggle_ZombieFarm = Tabs.Mode2:Toggle({
+	Title = Translate("ฟาร์มซอมบี้", "Farm Zombie"),
+	Value = false,
+	Callback = function(state)
+		ZombieFarm = state
+		if state == false then
+			clip()
+			Camera.CameraType = Enum.CameraType.Custom
+		else
+			noclip()
+		end
+	end
+})
+
+FarmHeight = 6
+Slider_FarmHeight = Tabs.Mode2:Slider({
+	Title = Translate("ระยะความสูงในการฟาร์ม", "Height range on Zombies"),
+	Value = {
+		Min = 0,
+		Max = 10,
+		Default = 6,
+	},
+	Callback = function(value)
+		FarmHeight = tonumber(value)
+	end
+})
+
+AutoColletDropItem = false
+Toggle_AutoColletDropItem = Tabs.Mode2:Toggle({
+	Title = Translate("ออโต้เก็บไอเท็มที่ดรอบ", "Auto Collet Drop Item"),
+	Value = false,
+	Callback = function(state)
+		AutoColletDropItem = state
+		if state == false then
+			Camera.CameraType = Enum.CameraType.Custom
+		end
+	end
+})
+
+AutoOpenTheDoor = false
+Toggle_AutoOpenTheDoor = Tabs.Mode2:Toggle({
+	Title = Translate("ออโต้เปิดประตู", "Auto Open Door"),
+	Value = false,
+	Callback = function(state)
+		AutoOpenTheDoor = state
+	end
+})
+
+Section = Tabs.Mode2:Section({ 
+	Title = "Section",
+	TextXAlignment = "Left",
+	TextSize = 25,
+})
+Section:SetTitle(Translate("🗺 ออโต้สร้างห้อง", "🗺 Auto Start"))
+
+AutoCreateRoom = false
+Toggle_AutoCreateRoom = Tabs.Mode2:Toggle({
+	Title = Translate("ออโต้สร้างห้อง", "Auto Start"),
+	Value = false,
+	Callback = function(state)
+		AutoCreateRoom = state
+	end
+})
+
+Cool_Down_Auto_Create = 10
+Slider_Cool_Down_Auto_Create = Tabs.Mode2:Slider({
+	Title = Translate("หน่วงเวลาในการสร้างห้อง", "Delay in room creation"),
+	Value = {
+		Min = 0,
+		Max = 60,
+		Default = 10,
+	},
+	Callback = function(value)
+		Cool_Down_Auto_Create = tonumber(value)
+	end
+})
+
+Choose_Map_Farm = tostring(getgenv().Setting.Map)
+Tabs.Mode2:Dropdown({
+	Title = Translate("แมพที่ต้องการฟาร์ม", "Map needs farming"),
+	Values = { "School", "Sewers" },--"Sewers"
+	Value = Choose_Map_Farm,
+	Callback = function(option) 
+		Choose_Map_Farm = option
+	end
+})
+
+Choose_Difficulty_Farm = tostring(getgenv().Setting.Difficulty)
+Tabs.Mode2:Dropdown({
+	Title = Translate("ระดับความยากที่ต้องการฟาร์ม", "Difficulty to farm"),
+	Values = { "Normal", "Hard", "Nightmare"},
+	Value = Choose_Difficulty_Farm,
+	Callback = function(option) 
+		Choose_Difficulty_Farm = option
+	end
+})
+
+Choose_Mode_Farm = tostring(getgenv().Setting.Mode)
+Tabs.Mode2:Dropdown({
+	Title = Translate("โหมดที่ต้องการฟาร์ม", "Mode to farm"),
+	Values = {"None","Campaign", "Endless"},
+	Value = Choose_Mode_Farm,
+	Callback = function(option) 
+		Choose_Mode_Farm = option
+	end
+})
+
+Section = Tabs.Mode2:Section({ 
+	Title = "Section",
+	TextXAlignment = "Left",
+	TextSize = 25,
+})
+Section:SetTitle(Translate("🌟 ออโต้ใช้สกิล", "🌟 Auto Use Skill"))
+
+AutoUseSkill = false
+Toggle_AutoUseSkill = Tabs.Mode2:Toggle({
+	Title = Translate("ออโต้ใช้สกิล", "Auto Use Skill"),
+	Value = false,
+	Callback = function(state)
+		AutoUseSkill = state
+	end
+})
+
+Tabs.Mode2:Divider()
+
+WeaponSkill = false
+Toggle_WeaponSkill = Tabs.Mode2:Toggle({
+	Title = Translate("ใช้สกิลอาวุธ", "Weapon Skill"),
+	Value = true,
+	Callback = function(state)
+		WeaponSkill = state
+	end
+})
+PerkSkill = false
+Toggle_PerkSkill = Tabs.Mode2:Toggle({
+	Title = Translate("ใช้สกิลความสามารถพิเศษ ( Perk )", "Perk Skill"),
+	Value = true,
+	Callback = function(state)
+		PerkSkill = state
+	end
+})
+Z_Skill = false
+Toggle_Z_Skill = Tabs.Mode2:Toggle({
+	Title = Translate("ใช้สกิล - Z", "Use Skill Z"),
+	Value = true,
+	Callback = function(state)
+		Z_Skill = state
+	end
+})
+X_Skill = false
+Toggle_X_Skill = Tabs.Mode2:Toggle({
+	Title = Translate("ใช้สกิล - X", "Use Skill X"),
+	Value = true,
+	Callback = function(state)
+		X_Skill = state
+	end
+})
+C_Skill = false
+Toggle_C_Skill = Tabs.Mode2:Toggle({
+	Title = Translate("ใช้สกิล - C", "Use Skill C"),
+	Value = true,
+	Callback = function(state)
+		C_Skill = state
+	end
+})
+
+task.spawn(function()
+	if getgenv().Setting and getgenv().Setting.Farm_Mode then
+		if getgenv().Setting.Farm_Mode == "Kai_tan" then
+			pcall(function()
+				print("Hello")
+
+				ZombieFarm = true
+				AutoColletDropItem = true
+				AutoOpenTheDoor = true
+				AutoCreateRoom = true
+				AutoUseSkill = true
+				WeaponSkill = true
+				PerkSkill = true
+				Z_Skill = true
+				X_Skill = true
+				C_Skill = true
+				ScriptIsRunning = false
+				BlackScreen = true
+				
+				setfpscap(15)
+				
+				if not plrGui:FindFirstChild("SomtankBlackSgreen") then
+					NewScreenGui = Instance.new("ScreenGui", plrGui)
+					NewCanvas = Instance.new("CanvasGroup", NewScreenGui)
+					NewTextLabel = Instance.new("TextLabel", NewScreenGui)
+					NewCanvas.Position = UDim2.new(0, 0, -0.2, 0)
+					NewCanvas.Size = UDim2.new(2, 0, 2, 0)
+					NewCanvas.BackgroundColor3 = Color3.new(0, 0, 0)
+					NewTextLabel.Position = UDim2.new(0, 0, 0, 0)
+					NewTextLabel.Size = UDim2.new(1, 0, 1, 0)
+					NewTextLabel.BackgroundTransparency = 1
+					NewTextLabel.TextColor3 = Color3.new(1, 1, 1)
+					NewTextLabel.TextScaled = true
+					NewTextLabel.ZIndex = 9
+					NewTextLabel.Text = "Hello World"
+					NewScreenGui.Name = "SomtankBlackSgreen"
+					ShowText = NewTextLabel
+				end
+
+				Window:Close()
+				
+				Lighting.GlobalShadows = false
+				Lighting.FogEnd = 9999
+				Lighting.FogStart = 9999
+				settings().Rendering.QualityLevel = 1
+				for i,v in pairs(game:GetDescendants()) do
+					if v:IsA("BasePart") then
+						v.Material = "Plastic"
+						v.Reflectance = 0
+						v.BackSurface = "SmoothNoOutlines"
+						v.BottomSurface = "SmoothNoOutlines"
+						v.FrontSurface = "SmoothNoOutlines"
+						v.LeftSurface = "SmoothNoOutlines"
+						v.RightSurface = "SmoothNoOutlines"
+						v.TopSurface = "SmoothNoOutlines"
+					elseif v:IsA("Decal") then
+						v.Transparency = 1
+					elseif v:IsA("ParticleEmitter") or v:IsA("Trail") then
+						v.Lifetime = NumberRange.new(0)
+					end
+					wait()
+				end
+				for i,v in pairs(Lighting:GetDescendants()) do
+					if v:IsA("PostEffect") then
+						v.Enabled = false
+					end
+					wait()
+				end
+				workspace.DescendantAdded:Connect(function(child)
+					task.spawn(function()
+						if child:IsA('ForceField') or child:IsA('Sparkles') or child:IsA('Smoke') or child:IsA('Fire') or child:IsA('Beam') then
+							RunService.Heartbeat:Wait()
+							child:Destroy()
+						end
+					end)
+				end)
+				
+			end)
+		end
+	end
+end)
+
+
+----------------------------- Loop Script ----------------------------
+
+local function CheckClass(textLabel, All_Class)
+	if not textLabel or not textLabel:IsA("TextLabel") then
+		return false
+	end
+	for _, className in ipairs(All_Class) do
+		if textLabel.Text == className then
+			return true
+		end
+	end
+	return false
+end
+
+task.spawn(function()-- Weapon Rerole
+	if tonumber(game.PlaceId) ~= tonumber(103754275310547) then return end
+	local USERAGREE = plrGui:WaitForChild("useraskGUI"):WaitForChild("USERAGREE")
+	local GUI, Row1, Spin_Weapon_Frame = plrGui:FindFirstChild("GUI"), plrGui:WaitForChild("GUI"):WaitForChild("Hud"):WaitForChild("Left"):WaitForChild("Row1"), nil
+	local Open_Weapon = Row1:WaitForChild("Weapon"):WaitForChild("Shape"):WaitForChild("Fill")
+	
+	local All_Weapon_Name = {"BASEBALL", "AXES", "GUITAR", "DUAL GUN", "KATANA", "GREATSWORD"}
+	
+	repeat
+		for i,v in ipairs(GUI:GetChildren()) do
+			if v:IsA("ImageLabel") and v:FindFirstChild("Header") then
+				local Header = v:FindFirstChild("Header")
+				if CheckClass(Header, All_Weapon_Name) then
+					Spin_Weapon_Frame = v
+				end
+			end
+		end
+		wait(1)
+	until Spin_Weapon_Frame ~= nil
+	print("***** Set Weapon")
+	
+	local HolderW = Spin_Weapon_Frame:WaitForChild("SpinButtons"):WaitForChild("Holder")
+	
+	local W_Lucky_Spin, W_Lucky_Count, W_Normal_Spin, W_Normal_Count = HolderW:WaitForChild("Lucky"), HolderW:WaitForChild("Lucky"):WaitForChild("Counter"), HolderW:WaitForChild("Normal"), HolderW:WaitForChild("Normal"):WaitForChild("Counter")
+		
+	while true do
+		if Auto_Random_Find_Weapon or Auto_Random_Find_Weapon_Lucky then
+			repeat
+				if Spin_Weapon_Frame.Visible == false then
+					firesignal(Open_Weapon.MouseButton1Click)
+					wait(0.5)
+				end
+				if Spin_Weapon_Frame.Header and Choose_Target_Weapon and Spin_Weapon_Frame.Header.Text ~= Choose_Target_Weapon then
+					print(Spin_Weapon_Frame.Header.Text.." ~= "..Choose_Target_Weapon)
+					pcall(function()
+						for i,v in ipairs(USERAGREE.Frame.responseframe:GetChildren()) do
+							if v:FindFirstChild("TextLabel") and v:FindFirstChild("TextLabel").Text == "SURE" then
+								firesignal(v.MouseButton1Click)
+							end
+						end
+					end)
+					if Auto_Random_Find_Weapon_Lucky then
+						firesignal(HolderW.Lucky.MouseButton1Click)
+						wait(0.5)
+						firesignal(HolderW.Lucky.MouseButton1Click)
+					elseif Auto_Random_Find_Weapon then
+						firesignal(HolderW.Normal.MouseButton1Click)
+						wait(0.5)
+						firesignal(HolderW.Normal.MouseButton1Click)
+					end
+				end
+				wait(0.5)
+			until Auto_Random_Find_Weapon == false and Auto_Random_Find_Weapon_Lucky == false 
+		end
+		wait(1)
+	end
+end)
+
+task.spawn(function()-- Perk Rerole
+	if tonumber(game.PlaceId) ~= tonumber(103754275310547) then return end
+	local USERAGREE = plrGui:WaitForChild("useraskGUI"):WaitForChild("USERAGREE")
+	local GUI, Row1, Spin_Weapon_Frame, Spin_Perk_Frame = plrGui:FindFirstChild("GUI"), plrGui:WaitForChild("GUI"):WaitForChild("Hud"):WaitForChild("Left"):WaitForChild("Row1"), nil, nil
+	local Open_Perks = Row1:WaitForChild("Perks"):WaitForChild("Shape"):WaitForChild("Fill")
+
+	local All_Perk_Name = {"BERSERKER", "HEALER", "FLAME", "CRITICAL", "UNDEAD", "Vampire"}
+
+	repeat
+		for i,v in ipairs(GUI:GetChildren()) do
+			if v:IsA("ImageLabel") and v:FindFirstChild("Header") then
+				local Header = v:FindFirstChild("Header")
+				if CheckClass(Header, All_Perk_Name) then
+					Spin_Perk_Frame = v
+				end
+			end
+		end
+		wait(1)
+	until Spin_Perk_Frame ~= nil
+	print("***** Set Perk ")
+
+	local HolderP = Spin_Perk_Frame:WaitForChild("SpinButtons"):WaitForChild("Holder")
+
+	local P_Lucky_Spin, P_Lucky_Count, P_Normal_Spin, P_Normal_Count = HolderP:WaitForChild("Lucky"), HolderP:WaitForChild("Lucky"):WaitForChild("Counter"), HolderP:WaitForChild("Normal"), HolderP:WaitForChild("Normal"):WaitForChild("Counter")
+
+	while true do
+		if Auto_Random_Find_Perk or Auto_Random_Find_Perk_Lucky then
+			repeat
+				if Spin_Perk_Frame.Visible == false then
+					firesignal(Open_Perks.MouseButton1Click)
+					wait(0.5)
+				end
+				if Spin_Perk_Frame.Header and Choose_Target_Perk and Spin_Perk_Frame.Header.Text ~= Choose_Target_Perk then
+					print(Spin_Weapon_Frame.Header.Text.." ~= "..Choose_Target_Perk)
+					pcall(function()
+						for i,v in ipairs(USERAGREE.Frame.responseframe:GetChildren()) do
+							if v:FindFirstChild("TextLabel") and v:FindFirstChild("TextLabel").Text == "SURE" then
+								firesignal(v.MouseButton1Click)
+							end
+						end
+					end)
+					if Auto_Random_Find_Perk_Lucky then
+						firesignal(HolderP.Lucky.MouseButton1Click)
+						wait(0.5)
+						firesignal(HolderP.Lucky.MouseButton1Click)
+					elseif Auto_Random_Find_Perk then
+						firesignal(HolderP.Normal.MouseButton1Click)
+						wait(0.5)
+						firesignal(HolderP.Normal.MouseButton1Click)
+					end
+				end
+				wait(0.5)
+			until Auto_Random_Find_Perk == false and Auto_Random_Find_Perk_Lucky == false 
+		end
+		wait(1)
+	end
+end)
+
+task.spawn(function()-- Create Room
+	if tonumber(game.PlaceId) ~= tonumber(103754275310547) then return end
+
+	local Match, Created, TimeReTry, SpawnCFrame = workspace:WaitForChild("Match"), false, 0, HMNRT.CFrame
+
+	local StartPlaceRedo = plrGui:WaitForChild("GUI"):WaitForChild("StartPlaceRedo")
+	local iContent = plrGui:WaitForChild("GUI"):WaitForChild("StartPlaceRedo"):WaitForChild("Content"):WaitForChild("iContent")
+	local Start_Button = iContent:WaitForChild("Button")
+
+	local F_pls = iContent:WaitForChild("options"):WaitForChild("playerselect"):WaitForChild("F")
+	local De_PlayerSize, Plus_PlayerSize = F_pls:WaitForChild("l"), F_pls:WaitForChild("r")
+	local PlayerSize_TextLabel = F_pls:WaitForChild("Shape"):WaitForChild("Fill"):WaitForChild("TextLabel")
+
+	local function OtherPlayerNear(TargetPosition, NearValue)
+		local Players, Resut = game:GetService("Players"), true
+		for i,v in ipairs(Players:GetChildren()) do
+			if v ~= player and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+				local Dis = (v.Character:FindFirstChild("HumanoidRootPart").Position - TargetPosition).Magnitude
+				if Dis < NearValue then
+					Resut = false
+				end
+			end
+		end
+		return Resut
+	end
+
+	local maps_select, modes_select, upmodes_select = iContent:WaitForChild("maps"), iContent:WaitForChild("modes"), iContent:WaitForChild("upmodes")
+
+	local function Click_Mode(Grup, TargetButton)
+		if Grup and TargetButton and TargetButton ~= "None" then
+			for i,v in ipairs(Grup:GetChildren()) do
+				if v:IsA("TextButton") and v:FindFirstChild("TextLabel") then
+					if v:FindFirstChild("TextLabel").Text == TargetButton then
+						firesignal(v.MouseButton1Click)
+					end
+				end
+			end
+		end
+	end
+
+	local TeleportService = game:GetService("TeleportService")
+	local PlaceId = game.PlaceId
+
+	local function getServerList()
+		local success, result = pcall(function()
+			return HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"))
+		end)
+		if success and result and result.data then
+			return result.data
+		else
+			warn("ไม่สามารถดึงข้อมูล server ได้")
+			return nil
+		end
+	end
+	local function findBestServer(maxPlayers)
+		maxPlayers = maxPlayers or 5
+		local servers = getServerList()
+		if not servers then
+			return nil
+		end
+		table.sort(servers, function(a, b)
+			return a.playing < b.playing
+		end)
+		for _, server in ipairs(servers) do
+			local currentServerJobId = game.JobId
+			if server.id ~= currentServerJobId and 
+				server.playing <= maxPlayers and 
+				server.playing > 0 then
+				return server
+			end
+		end
+		return nil
+	end
+	local function hopToServer(targetServer)
+		if not targetServer then
+			warn("ไม่พบ server ที่เหมาะสม")
+			return false
+		end
+		local success, errorMessage = pcall(function()
+			TeleportService:TeleportToPlaceInstance(PlaceId, targetServer.id, player)
+		end)
+		if not success then
+			warn("ไม่สามารถ teleport ได้: " .. tostring(errorMessage))
+			return false
+		end
+		return true
+	end
+	local function serverHop(maxPlayers)
+		maxPlayers = maxPlayers or 5
+		local targetServer = findBestServer(maxPlayers)
+		if targetServer then
+			return hopToServer(targetServer)
+		else
+			wait(2)
+			targetServer = findBestServer(maxPlayers + 3)
+			if targetServer then
+				return hopToServer(targetServer)
+			else
+				warn("ไม่พบ server ที่เหมาะสมเลย")
+				return false
+			end
+		end
+	end
+
+	_G.ServerHopper = {hop = serverHop,findBest = findBestServer,getServers = getServerList}
+
+	for i=1, Cool_Down_Auto_Create do
+		wait(1)
+		print("Cool_Down_Auto_Create "..Cool_Down_Auto_Create .." / "..i)
+	end
+
+	while true do
+		if AutoCreateRoom then
+			print("AutoCreateRoom is Reapeat")
+			repeat
+				if TimeReTry >= 5 then
+					serverHop(15)
+				end
+				if StartPlaceRedo.Visible == false and Created == false then
+					for i,PartTouch in ipairs(Match:GetChildren()) do
+						if PartTouch:IsA("BasePart") and OtherPlayerNear(PartTouch.Position, 7) then
+							if Created == false then
+								pcall(function()
+									HMNRT.CFrame = CFrame.new(PartTouch.Position)
+									wait(1.5)
+									if StartPlaceRedo and StartPlaceRedo.Visible == true then
+										Created = true
+									end
+								end)
+							end
+						end
+					end
+					HMNRT.CFrame = SpawnCFrame * CFrame.new(0,5,0)
+					TimeReTry = TimeReTry + 1
+					task.wait(5)
+				end
+				if StartPlaceRedo and StartPlaceRedo.Visible == true then
+					for i=1,10 do
+						firesignal(De_PlayerSize.MouseButton1Click)
+						wait(0.05)
+					end
+
+					print("*** Map "..Choose_Map_Farm.." Difficulty "..Choose_Difficulty_Farm.." Mode "..Choose_Mode_Farm)
+					wait(0.7)
+					if Choose_Mode_Farm ~= "None" then
+						Click_Mode(upmodes_select, Choose_Mode_Farm)
+					end
+					wait(0.7)
+					Click_Mode(maps_select, Choose_Map_Farm)
+					wait(0.7)
+					Click_Mode(modes_select, Choose_Difficulty_Farm)
+					wait(1)
+					firesignal(Start_Button.MouseButton1Click)
+					Created = true
+				end
+				wait(1)
+			until AutoCreateRoom == false
+		end
+		wait(1)
+	end
+end)
+
+task.spawn(function()-- Inf_PerkSkill
+	if tonumber(game.PlaceId) == tonumber(103754275310547) then return end
+	local ByteNetReliable = game:GetService("ReplicatedStorage"):WaitForChild("ByteNetReliable")
+	while true do
+		if Inf_PerkSkill then
+			repeat
+				ByteNetReliable:FireServer(buffer.fromstring("\v"))
+				wait(30)
+			until Inf_PerkSkill == false
+		end
+		wait(1)
+	end
+end)
+
+task.spawn(function()-- Door
+	if tonumber(game.PlaceId) == tonumber(103754275310547) then return end
+	local Doors = nil
+
+	if workspace:FindFirstChild("School") then
+		Doors = workspace:WaitForChild("School"):WaitForChild("Doors")
+	end
+	if workspace:FindFirstChild("Sewers") then
+		Doors = workspace:WaitForChild("Sewers"):WaitForChild("Doors")
+	end
+
+	while true do
+		if AutoOpenTheDoor and Doors then
+			repeat
+				for i,v in ipairs(Doors:GetChildren()) do
+					if v:IsA("Model") and v.PrimaryPart and not v:FindFirstChild("OpennedBySomtank") then
+						pcall(function()
+							Camera.CameraType = Enum.CameraType.Scriptable
+							HMNRT.CFrame = CFrame.new(v.PrimaryPart.Position)
+							NewHighlight = Instance.new("RayValue", v)
+							NewHighlight.Name = "OpennedBySomtank"
+						end)
+					end
+					wait(0.1)
+					Camera.CameraType = Enum.CameraType.Custom
+				end
+				wait(5)
+			until AutoOpenTheDoor == false
+		end
+		wait(1)
+	end
+end)
+
+task.spawn(function()-- Auto Skill
+	if tonumber(game.PlaceId) == tonumber(103754275310547) then return end
+	local ByteNetReliable = game:GetService("ReplicatedStorage"):WaitForChild("ByteNetReliable")
+	local MainScreen = plrGui:WaitForChild("MainScreen")	
+	local Perk_Bar = MainScreen:WaitForChild("LeftSide"):WaitForChild("PlayerHUD"):WaitForChild("Bars"):WaitForChild("Perk"):WaitForChild("Fill")
+	local AbilityHotbar = MainScreen:WaitForChild("AbilityHotbar")	
+	local AbilityHotbar1_Button = AbilityHotbar:WaitForChild("1")
+	local AbilityHotbar2_Button = AbilityHotbar:WaitForChild("2")
+	local AbilityHotbar3_Button = AbilityHotbar:WaitForChild("3")	
+	local Skill1_Bar = AbilityHotbar1_Button:WaitForChild("Cooldown"):WaitForChild("Frame")
+	local Skill2_Bar = AbilityHotbar2_Button:WaitForChild("Cooldown"):WaitForChild("Frame")
+	local Skill3_Bar = AbilityHotbar3_Button:WaitForChild("Cooldown"):WaitForChild("Frame")	
+	local UltBar_Button = MainScreen:WaitForChild("UltBar")
+	local UltBar = UltBar_Button:WaitForChild("Fill")
+	local Entities = workspace:WaitForChild("Entities")
+
+	local function ScanNearZombie()
+		local NearZombie, NearValue = nil, math.huge
+		for i,v in ipairs(Entities:GetChildren()) do
+			pcall(function()
+				if v:FindFirstChild("HumanoidRootPart") then
+					local Dis = (HMNRT.Position - v.HumanoidRootPart.Position).Magnitude
+					if Dis < NearValue then
+						NearZombie = v
+						NearValue = math.floor(Dis)
+					end
+				end
+			end)
+		end
+		return NearZombie, NearValue
+	end
+
+	local function Check_And_UseSkill()
+		if PerkSkill and Perk_Bar and Perk_Bar.Size.X.Scale > 0.97 then
+			ByteNetReliable:FireServer(buffer.fromstring("\v"))
+		end
+		if WeaponSkill and UltBar and UltBar.Size.X.Scale > 0.97 then
+			firesignal(UltBar_Button.MouseButton1Click)
+		end
+		if Z_Skill and Skill1_Bar and Skill1_Bar.Size.Y.Scale > 0.97 then
+			firesignal(AbilityHotbar1_Button.MouseButton1Click)
+		end
+		if X_Skill and Skill2_Bar and Skill2_Bar.Size.Y.Scale > 0.97 then
+			firesignal(AbilityHotbar2_Button.MouseButton1Click)
+		end
+		if C_Skill and Skill3_Bar and Skill3_Bar.Size.Y.Scale > 0.97 then
+			firesignal(AbilityHotbar3_Button.MouseButton1Click)
+		end
+	end
+
+	while true do
+		if AutoUseSkill then
+			repeat
+				local NearZombie, NearValue = ScanNearZombie()
+				if NearValue < 15 then
+					Check_And_UseSkill()
+				end
+				wait(0.7)
+			until AutoUseSkill == false
+		end
+		wait(1)
+	end
+end)
+
+task.spawn(function()-- Auto Collet Item
+	if tonumber(game.PlaceId) == tonumber(103754275310547) then return end
+	local DropItems = workspace:WaitForChild("DropItems")
+	while true do
+		if AutoColletDropItem then
+			repeat
+				for i,v in ipairs(DropItems:GetChildren()) do
+					if v:IsA("BasePart") then
+						pcall(function()
+							Camera.CameraType = Enum.CameraType.Scriptable
+							HMNRT.CFrame = CFrame.new(v.Position) * CFrame.new(0,1.5,0)
+						end)						
+					end
+					wait()
+					Camera.CameraType = Enum.CameraType.Custom
+				end
+				
+				wait(5)
+			until AutoColletDropItem == false
+		end
+		wait(1)
+	end
+end)
+
+task.spawn(function()
+	repeat
+		wait(1)
+	until game:IsLoaded()
+	
+	local Entities, Stage, WantHeli, Map = workspace:WaitForChild("Entities"), "none", 0, "School"
+	local RadioObjective, HeliObjective, generator = nil, nil, nil
+
+	local EndScreen = plrGui:WaitForChild("MainScreen_Sibling"):WaitForChild("EndScreen")
+	local back_to_lobby_Button = EndScreen:WaitForChild("List"):WaitForChild("back")
+
+	if workspace:FindFirstChild("School") then
+		Stage = "Wait_Call_Helicopter"
+		Map = "School"
+		warn("***** Set Win Stage on Shcool")
+	end
+
+	if workspace:FindFirstChild("Sewers") then
+		Map = "Sewers"
+		Stage = "Wait_Start_Generator"
+		warn("***** Set Win Stage on Sewers")
+	end
+
+	while true do
+		if ZombieFarm then
+			repeat
+				if Stage ~= "WantWin" then
+					pcall(function()
+						for i,v in ipairs(Entities:GetChildren()) do
+							if ZombieFarm and v:FindFirstChild("HumanoidRootPart") and v:FindFirstChild("Head") then
+								local HealthBar_Zombie = v:FindFirstChild("Head"):FindFirstChild("EntityHealth"):FindFirstChild("HealthBar"):FindFirstChild("Bar")
+								if HealthBar_Zombie and HealthBar_Zombie.Size.X.Scale > 0 then
+									repeat
+										HMNRT.CFrame = CFrame.new(v.HumanoidRootPart.Position) * CFrame.new(0,FarmHeight,0)
+										wait(0.001)
+									until HealthBar_Zombie.Size.X.Scale <= 0 or HealthBar_Zombie == nil or ZombieFarm == false or v == nil
+								end
+							end
+						end
+					end)
+				end
+				if Map == "Sewers" then
+					if Stage == "Wait_Start_Generator" then
+						if generator == nil then
+							if workspace:FindFirstChild("Sewers") 
+								and workspace:FindFirstChild("Sewers"):FindFirstChild("Rooms") 
+								and workspace:FindFirstChild("Sewers"):FindFirstChild("Rooms"):FindFirstChild("BossRoom") 
+								and workspace:FindFirstChild("Sewers"):FindFirstChild("Rooms"):FindFirstChild("BossRoom"):FindFirstChild("generator") 
+								and workspace:FindFirstChild("Sewers"):FindFirstChild("Rooms"):FindFirstChild("BossRoom"):FindFirstChild("generator"):FindFirstChild("gen")
+								and  workspace:FindFirstChild("Sewers"):FindFirstChild("Rooms"):FindFirstChild("BossRoom"):FindFirstChild("generator"):FindFirstChild("gen"):FindFirstChildOfClass("ProximityPrompt") then
+								generator = workspace:FindFirstChild("Sewers"):FindFirstChild("Rooms"):FindFirstChild("BossRoom"):FindFirstChild("generator"):FindFirstChild("gen")
+							end
+						else
+							clip()
+							local Prox = generator:FindFirstChildOfClass("ProximityPrompt")
+							HMNRT.CFrame = CFrame.new(generator.Position) * CFrame.new(0,3,0)
+							wait(0.5)
+							fireproximityprompt(Prox)
+							wait(0.5)
+							Stage = "Wait_gate_Open"
+							noclip()
+						end
+					elseif Stage == "Wait_gate_Open" then
+						if WantHeli >= 5 then
+							if EndScreen.Visible == true then
+								wait(0.5)
+								firesignal(back_to_lobby_Button.MouseButton1Click)
+							end
+						else
+							WantHeli = WantHeli + 0.5
+						end
+					end
+				elseif Map == "School" then
+					if Stage == "Wait_Call_Helicopter" then
+						if RadioObjective == nil then
+							if workspace:FindFirstChild("School") 
+								and workspace:FindFirstChild("School"):FindFirstChild("Rooms") 
+								and workspace:FindFirstChild("School"):FindFirstChild("Rooms"):FindFirstChild("RooftopBoss") 
+								and workspace:FindFirstChild("School"):FindFirstChild("Rooms"):FindFirstChild("RooftopBoss"):FindFirstChild("RadioObjective") 
+								and workspace:FindFirstChild("School"):FindFirstChild("Rooms"):FindFirstChild("RooftopBoss"):FindFirstChild("RadioObjective"):FindFirstChildOfClass("ProximityPrompt") then
+								RadioObjective = workspace:FindFirstChild("School"):FindFirstChild("Rooms"):FindFirstChild("RooftopBoss"):FindFirstChild("RadioObjective")
+							end
+						else
+							clip()
+							local Prox = RadioObjective:FindFirstChildOfClass("ProximityPrompt")
+							HMNRT.CFrame = CFrame.new(RadioObjective.Position) * CFrame.new(0,3,0)
+							wait(0.5)
+							fireproximityprompt(Prox)
+							wait(0.5)
+							Stage = "Calling_Helicopter"
+							noclip()
+						end
+					elseif Stage == "Calling_Helicopter" then
+						if WantHeli >= 18 then
+							HMNRT.CFrame = CFrame.new(HeliObjective.Position) * CFrame.new(0,5,0)
+							local Prox = HeliObjective:FindFirstChildOfClass("ProximityPrompt")
+							wait(0.5)
+							fireproximityprompt(Prox)
+							Stage = "WantWin"
+							for i=1,10 do
+								HMNRT.CFrame = CFrame.new(HeliObjective.Position) * CFrame.new(0,5,0)
+								wait(0.2)
+								fireproximityprompt(Prox)
+							end
+							repeat
+								wait(0.3)
+							until EndScreen.Visible == true
+							wait(0.5)
+							firesignal(back_to_lobby_Button.MouseButton1Click)
+						else
+							WantHeli = WantHeli + 0.5
+						end
+					end
+				end
+				print("***** WantHeli : "..WantHeli)
+				wait(0.5)
+			until ZombieFarm == false
+			workspace.Gravity = 190
+		end
+		wait(1)
+	end
+end)
+
+task.spawn(function()-- Auto Kill
+	if tonumber(game.PlaceId) == tonumber(103754275310547) then return end
+	local ByteNetReliable = game:GetService("ReplicatedStorage"):WaitForChild("ByteNetReliable")
+	while true do
+		if ZombieFarm or AutoKill then
+			repeat
+				ByteNetReliable:FireServer(buffer.fromstring("\a\004\001"),{1755879640.252399})
+				wait(0.1)
+			until ZombieFarm == false and AutoKill == false
+		end
+		wait(1)
+	end
+end)
+
+Tabs.Mode2:Divider()
+
+Window:OnDestroy(function()
+	ScreenGui:Destroy()
+	ScriptIsRunning = false
+	getgenv().SomtankIsRun = false
+end)
+
+local elements = {
+	Toggle_Inf_PerkSkill = Toggle_Inf_PerkSkill,
+	Toggle_ZombieFarm = Toggle_ZombieFarm,
+	Slider_FarmHeight = Slider_FarmHeight,
+	Toggle_AutoColletDropItem = Toggle_AutoColletDropItem,
+	Toggle_AutoOpenTheDoor = Toggle_AutoOpenTheDoor,
+	Toggle_AutoCreateRoom = Toggle_AutoCreateRoom,
+	Slider_Cool_Down_Auto_Create = Slider_Cool_Down_Auto_Create,
+	Toggle_AutoUseSkill = Toggle_AutoUseSkill,
+	Toggle_WeaponSkill = Toggle_WeaponSkill,
+	Toggle_PerkSkill = Toggle_PerkSkill,
+	Toggle_Z_Skill = Toggle_Z_Skill,
+	Toggle_X_Skill = Toggle_X_Skill,
+	Toggle_C_Skill = Toggle_C_Skill,
+	Dropdown_Choose_Target_Weapon = Dropdown_Choose_Target_Weapon,
+	Dropdown_Choose_Target_Perk = Dropdown_Choose_Target_Perk,
+	Slider_Fps_Value = Slider_Fps_Value,
+	Toggle_BlackScreen = Toggle_BlackScreen,
+}
+for name, element in pairs(elements) do
+	myConfig:Register(name, element)
+end
+myConfig:Load()
+local configs = myConfig:Get() or {}
+for name, value in pairs(configs) do
+	local element = myConfig.Elements[name]
+	if element and value ~= nil then
+		element.Value = value
+	end
+end
+local lastPos, afkTime, afkThreshold, StuckTime = HMNRT.Position, 0, 30, 0
+while true do
+	pcall(function()
+		StuckTime = StuckTime + 2
+		if StuckTime >= 1080 then
+			game:GetService("TeleportService"):Teleport(103754275310547, game.Players.LocalPlayer)
+			wait(10)
+		end
+		task.wait(2)
+		if (HMNRT.Position - lastPos).magnitude < 0.1 then
+			afkTime += 1.5
+			if ZombieFarm and afkTime >= afkThreshold then
+				game:GetService("TeleportService"):Teleport(103754275310547, game.Players.LocalPlayer)
+				wait(10)
+			end
+		else
+			afkTime = 0
+			lastPos = HMNRT.Position
+		end
+		if ScriptIsRunning then
+			myConfig:Save()
+		end
+	end)
+end
