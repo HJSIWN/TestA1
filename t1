@@ -47,7 +47,7 @@ if jsonData then
       local HttpService = game:GetService("HttpService")
       local Setting_Farm = ']] .. jsonData .. [['
       getgenv().Setting = HttpService:JSONDecode(Setting_Farm)
-      loadstring(game:HttpGet("https://raw.githubusercontent.com/HJSIWN/TestA1/refs/heads/main/t1"))()
+      --loadstring(game:HttpGet("https://raw.githubusercontent.com/HJSIWN/BoaYoga/refs/heads/main/nk-hz"))()
     ]])
 end
 
@@ -63,16 +63,6 @@ plrGui = player.PlayerGui
 
 ScreenGui, Icon_Position, ScriptIsRunning, LoadConfig = Instance.new("ScreenGui", CoreGui), nil, true, true
 
-task.spawn(function()
-	while true do
-		task.wait(1)
-		pcall(function()
-			character = game.Players.LocalPlayer.Character
-			humanoid = character:FindFirstChild("Humanoid")
-			HMNRT = character:FindFirstChild("HumanoidRootPart")
-		end)
-	end
-end)
 
 task.spawn(function()
 	pcall(function()
@@ -418,7 +408,7 @@ Section = Tabs.Mode2:Section({
 Section:SetTitle(Translate("⚙️ ตั้งค่าการฟาร์ม", "⚙️ Farm Setting"))
 
 BlackScreen, ShowText = false, nil 
-Tabs.Mode2:Toggle({
+Toggle_BlackScreen = Tabs.Mode2:Toggle({
 	Title = Translate("จอดำ", "Black Screen"),
 	Value = false,
 	Callback = function(state)
@@ -432,7 +422,7 @@ Tabs.Mode2:Toggle({
 			if not plrGui:FindFirstChild("SomtankBlackSgreen") then
 				NewScreenGui = Instance.new("ScreenGui", plrGui)
 				NewCanvas = Instance.new("CanvasGroup", NewScreenGui)
-				NewTextLabel = Instance.new("TextLabel", plrGui)
+				NewTextLabel = Instance.new("TextLabel", NewScreenGui)
 				NewCanvas.Position = UDim2.new(0, 0, -0.2, 0)
 				NewCanvas.Size = UDim2.new(2, 0, 2, 0)
 				NewCanvas.BackgroundColor3 = Color3.new(0, 0, 0)
@@ -442,6 +432,7 @@ Tabs.Mode2:Toggle({
 				NewTextLabel.TextColor3 = Color3.new(1, 1, 1)
 				NewTextLabel.TextScaled = true
 				NewTextLabel.ZIndex = 9
+				NewTextLabel.Text = "Hello World"
 				NewScreenGui.Name = "SomtankBlackSgreen"
 				ShowText = NewTextLabel
 			end
@@ -712,6 +703,48 @@ local function CheckClass(textLabel, All_Class)
 	end
 	return false
 end
+
+task.spawn(function()
+	while true do
+		task.wait(1)
+		pcall(function()
+			if BlackScreen == false then
+				ShowText = nil
+				if plrGui:FindFirstChild("SomtankBlackSgreen") then
+					plrGui:FindFirstChild("SomtankBlackSgreen"):Destroy()
+				end
+				Camera.CameraType = Enum.CameraType.Custom
+			else
+				if not plrGui:FindFirstChild("SomtankBlackSgreen") then
+					NewScreenGui = Instance.new("ScreenGui", plrGui)
+					NewCanvas = Instance.new("CanvasGroup", NewScreenGui)
+					NewTextLabel = Instance.new("TextLabel", NewScreenGui)
+					NewCanvas.Position = UDim2.new(0, 0, -0.2, 0)
+					NewCanvas.Size = UDim2.new(2, 0, 2, 0)
+					NewCanvas.BackgroundColor3 = Color3.new(0, 0, 0)
+					NewTextLabel.Position = UDim2.new(0, 0, 0, 0)
+					NewTextLabel.Size = UDim2.new(1, 0, 1, 0)
+					NewTextLabel.BackgroundTransparency = 1
+					NewTextLabel.TextColor3 = Color3.new(1, 1, 1)
+					NewTextLabel.TextScaled = true
+					NewTextLabel.ZIndex = 9
+					NewTextLabel.Text = "Hello World"
+					NewScreenGui.Name = "SomtankBlackSgreen"
+					ShowText = NewTextLabel
+				end
+				local cameraPos = HMNRT.Position + Vector3.new(0, 10, 0)
+				local lookAtPos = cameraPos + Vector3.new(0, 100, 0)
+				Camera.CameraType = Enum.CameraType.Scriptable
+				Camera.CFrame = CFrame.new(cameraPos, lookAtPos)
+			end
+			character = game.Players.LocalPlayer.Character
+			humanoid = character:FindFirstChild("Humanoid")
+			HMNRT = character:FindFirstChild("HumanoidRootPart")
+			plrGui = game.Players.LocalPlayer.PlayerGui
+			
+		end)
+	end
+end)
 
 task.spawn(function()-- Weapon Rerole
 	if tonumber(game.PlaceId) ~= tonumber(103754275310547) then return end
@@ -1288,6 +1321,7 @@ local elements = {
 	Dropdown_Choose_Target_Weapon = Dropdown_Choose_Target_Weapon,
 	Dropdown_Choose_Target_Perk = Dropdown_Choose_Target_Perk,
 	Slider_Fps_Value = Slider_Fps_Value,
+	Toggle_BlackScreen = Toggle_BlackScreen,
 }
 for name, element in pairs(elements) do
 	myConfig:Register(name, element)
