@@ -47,7 +47,7 @@ if jsonData then
       local HttpService = game:GetService("HttpService")
       local Setting_Farm = ']] .. jsonData .. [['
       getgenv().Setting = HttpService:JSONDecode(Setting_Farm)
-      loadstring(game:HttpGet("https://raw.githubusercontent.com/HJSIWN/BoaYoga/refs/heads/main/nk-hz"))()
+      --loadstring(game:HttpGet("https://raw.githubusercontent.com/HJSIWN/BoaYoga/refs/heads/main/nk-hz"))()
     ]])
 end
 
@@ -627,7 +627,7 @@ task.spawn(function()
 				AutoOpenTheDoor = true
 				AutoCreateRoom = true
 				AutoUseSkill = true
-				WeaponSkill = true
+				--WeaponSkill = true
 				PerkSkill = true
 				Z_Skill = true
 				X_Skill = true
