@@ -19,12 +19,11 @@ UIS = game:GetService("UserInputService")
 ----------------------------------------------------
 local jsonData = nil
 
+print("[[[[[[[[[[ Found - getgenv().Setting ]]]]]]]]]]")
 if getgenv().Setting then
-	print("[[[[[[[[[[ Found - getgenv().Setting ]]]]]]]]]]")
 	for k, v in pairs(getgenv().Setting) do
 		print("************* "..k, v)
 	end
-	print("***********************************************")
 	jsonData = HttpService:JSONEncode(getgenv().Setting)
 else
 	getgenv().Setting = {
@@ -34,20 +33,19 @@ else
 		Language = "English",--[ Thai / English ]
 		Farm_Mode = ""--[ Kai_tan = Farm ] 15fps )
 	}
-	print("[[[[[[[[[[ Set - getgenv().Setting ]]]]]]]]]]")
 	for k, v in pairs(getgenv().Setting) do
 		print("************* "..k, v)
 	end
-	print("***********************************************")
 	jsonData = HttpService:JSONEncode(getgenv().Setting)
 end
+print("***********************************************")
 
 if jsonData then
 	queue_on_teleport([[
       local HttpService = game:GetService("HttpService")
       local Setting_Farm = ']] .. jsonData .. [['
       getgenv().Setting = HttpService:JSONDecode(Setting_Farm)
-      loadstring(game:HttpGet("https://raw.githubusercontent.com/HJSIWN/TestA1/refs/heads/main/h2o"))()
+      loadstring(game:HttpGet("https://raw.githubusercontent.com/HJSIWN/BoaYoga/refs/heads/main/h2o"))()
     ]])
 end
 
