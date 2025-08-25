@@ -1,6 +1,6 @@
 
-repeat wait(0.1) until game:IsLoaded()
-repeat wait(0.1) until game:IsLoaded() and game.Players.LocalPlayer and game.Players.LocalPlayer.Character
+repeat wait(1) until game:IsLoaded()
+repeat wait(1) until game.Players.LocalPlayer and game.Players.LocalPlayer.Character
 
 if getgenv().SomtankIsRun then return end
 getgenv().SomtankIsRun = true
@@ -17,7 +17,7 @@ CoreGui = game:GetService("CoreGui")
 UIS = game:GetService("UserInputService")
 
 ----------------------------------------------------
-
+local jsonData = nil
 
 if getgenv().Setting then
 	print("[[[[[[[[[[ Found - getgenv().Setting ]]]]]]]]]]")
@@ -25,21 +25,30 @@ if getgenv().Setting then
 		print("************* "..k, v)
 	end
 	print("***********************************************")
-	local jsonData = HttpService:JSONEncode(getgenv().Setting)
-	queue_on_teleport([[
-      local HttpService = game:GetService("HttpService")
-      local Setting_Farm = ']] .. jsonData .. [['
-      getgenv().Setting = HttpService:JSONDecode(Setting_Farm)
-      --loadstring(game:HttpGet("https://raw.githubusercontent.com/HJSIWN/BoaYoga/refs/heads/main/nk-hz"))()
-    ]])
+	jsonData = HttpService:JSONEncode(getgenv().Setting)
 else
 	getgenv().Setting = {
 		Map = "Sewers",-- [ School / Sewers ]
 		Difficulty = "Normal",-- [ Normal / Hard  / Nightmare ]
 		Mode = "None",-- [ None / Campain  / Endless ]
 		Language = "English",--[ Thai / English ]
-		Farm_Mode = ""--[ Kai_tan = Farm ] U can delete ;)
+		Farm_Mode = ""--[ Kai_tan = Farm ] 15fps )
 	}
+	print("[[[[[[[[[[ Set - getgenv().Setting ]]]]]]]]]]")
+	for k, v in pairs(getgenv().Setting) do
+		print("************* "..k, v)
+	end
+	print("***********************************************")
+	jsonData = HttpService:JSONEncode(getgenv().Setting)
+end
+
+if jsonData then
+	queue_on_teleport([[
+      local HttpService = game:GetService("HttpService")
+      local Setting_Farm = ']] .. jsonData .. [['
+      getgenv().Setting = HttpService:JSONDecode(Setting_Farm)
+      --loadstring(game:HttpGet("https://raw.githubusercontent.com/HJSIWN/BoaYoga/refs/heads/main/nk-hz"))()
+    ]])
 end
 
 -----------------------------------------------------
@@ -54,16 +63,18 @@ plrGui = player.PlayerGui
 
 ScreenGui, Icon_Position, ScriptIsRunning, LoadConfig = Instance.new("ScreenGui", CoreGui), nil, true, true
 
-pcall(function()
-	if game:GetService("ReplicatedStorage"):FindFirstChild("Packets"):FindFirstChild("RequestDailyReward") then
-		game:GetService("ReplicatedStorage"):WaitForChild("Packets"):WaitForChild("RequestDailyReward"):InvokeServer()
-		firesignal(plrGui.GUI.DailyRewards.Banner.ExitButton.MouseButton1Click)
-	end
-	local codes_Lobby = {"100KLIKES","20KIN","70KLIKES","60KLIKES","sorryfordelay"}
-	local redeem = game:GetService("ReplicatedStorage"):WaitForChild("Packets"):WaitForChild("RedeemCode")
-	for _, code in ipairs(codes_Lobby) do
-		redeem:InvokeServer(code)
-	end
+task.spawn(function()
+	pcall(function()
+		if game:GetService("ReplicatedStorage"):FindFirstChild("Packets"):FindFirstChild("RequestDailyReward") then
+			game:GetService("ReplicatedStorage"):WaitForChild("Packets"):WaitForChild("RequestDailyReward"):InvokeServer()
+			firesignal(plrGui.GUI.DailyRewards.Banner.ExitButton.MouseButton1Click)
+		end
+		local codes_Lobby = {"100KLIKES","20KIN","70KLIKES","60KLIKES","sorryfordelay"}
+		local redeem = game:GetService("ReplicatedStorage"):WaitForChild("Packets"):WaitForChild("RedeemCode")
+		for _, code in ipairs(codes_Lobby) do
+			redeem:InvokeServer(code)
+		end
+	end)
 end)
 
 local function MakeDraggableButton(button: ImageButton, MoveFrame)
@@ -107,6 +118,7 @@ end
 MoveIcon = MakeImageButton(ScreenGui, UDim2.new(0, 53,0, 51), UDim2.new(0.100, 0,0.447, 0), 1, Color3.new(1, 1, 1), 0, "rbxassetid://81129676934693")
 FOR_MoveIcon = Instance.new("UIAspectRatioConstraint", MoveIcon)
 MakeDraggableButton(MoveIcon, MoveIcon)
+
 function gradient(text, startColor, endColor)
 	local result = ""
 	local length = #text
@@ -313,6 +325,7 @@ Section = Tabs.Mode1:Section({
 Section:SetTitle(Translate("ตั้งค่าผู้เล่น", "Player Setting"))
 
 pcall(function()
+	
 	Tabs.Mode1:Slider({
 		Title = Translate("ความเร็วการเดิน", "WalkSpeed"),
 		Value = {
@@ -341,6 +354,7 @@ pcall(function()
 			end)
 		end
 	})
+	
 end)
 
 AutoKill = false
@@ -439,13 +453,13 @@ Toggle_ZombieFarm = Tabs.Mode2:Toggle({
 	end
 })
 
-FarmHeight = 5
+FarmHeight = 6
 Slider_FarmHeight = Tabs.Mode2:Slider({
 	Title = Translate("ระยะความสูงในการฟาร์ม", "Height range on Zombies"),
 	Value = {
 		Min = 0,
 		Max = 10,
-		Default = 5,
+		Default = 6,
 	},
 	Callback = function(value)
 		FarmHeight = tonumber(value)
@@ -595,6 +609,7 @@ task.spawn(function()
 	if getgenv().Setting and getgenv().Setting.Farm_Mode then
 		if getgenv().Setting.Farm_Mode == "Kai_tan" then
 			pcall(function()
+				print("Hello")
 
 				ZombieFarm = true
 				AutoColletDropItem = true
@@ -609,12 +624,12 @@ task.spawn(function()
 				ScriptIsRunning = false
 				BlackScreen = true
 				
-				Window:Close()
-
+				setfpscap(15)
+				
 				if not plrGui:FindFirstChild("SomtankBlackSgreen") then
 					NewScreenGui = Instance.new("ScreenGui", plrGui)
 					NewCanvas = Instance.new("CanvasGroup", NewScreenGui)
-					NewTextLabel = Instance.new("TextLabel", plrGui)
+					NewTextLabel = Instance.new("TextLabel", NewScreenGui)
 					NewCanvas.Position = UDim2.new(0, 0, -0.2, 0)
 					NewCanvas.Size = UDim2.new(2, 0, 2, 0)
 					NewCanvas.BackgroundColor3 = Color3.new(0, 0, 0)
@@ -624,10 +639,49 @@ task.spawn(function()
 					NewTextLabel.TextColor3 = Color3.new(1, 1, 1)
 					NewTextLabel.TextScaled = true
 					NewTextLabel.ZIndex = 9
+					NewTextLabel.Text = "Hello World"
 					NewScreenGui.Name = "SomtankBlackSgreen"
 					ShowText = NewTextLabel
 				end
 
+				Window:Close()
+				
+				Lighting.GlobalShadows = false
+				Lighting.FogEnd = 9999
+				Lighting.FogStart = 9999
+				settings().Rendering.QualityLevel = 1
+				for i,v in pairs(game:GetDescendants()) do
+					if v:IsA("BasePart") then
+						v.Material = "Plastic"
+						v.Reflectance = 0
+						v.BackSurface = "SmoothNoOutlines"
+						v.BottomSurface = "SmoothNoOutlines"
+						v.FrontSurface = "SmoothNoOutlines"
+						v.LeftSurface = "SmoothNoOutlines"
+						v.RightSurface = "SmoothNoOutlines"
+						v.TopSurface = "SmoothNoOutlines"
+					elseif v:IsA("Decal") then
+						v.Transparency = 1
+					elseif v:IsA("ParticleEmitter") or v:IsA("Trail") then
+						v.Lifetime = NumberRange.new(0)
+					end
+					wait()
+				end
+				for i,v in pairs(Lighting:GetDescendants()) do
+					if v:IsA("PostEffect") then
+						v.Enabled = false
+					end
+					wait()
+				end
+				workspace.DescendantAdded:Connect(function(child)
+					task.spawn(function()
+						if child:IsA('ForceField') or child:IsA('Sparkles') or child:IsA('Smoke') or child:IsA('Fire') or child:IsA('Beam') then
+							RunService.Heartbeat:Wait()
+							child:Destroy()
+						end
+					end)
+				end)
+				
 			end)
 		end
 	end
@@ -648,10 +702,13 @@ local function CheckClass(textLabel, All_Class)
 	return false
 end
 
+
+
 task.spawn(function()-- Weapon Rerole
 	if tonumber(game.PlaceId) ~= tonumber(103754275310547) then return end
+	local USERAGREE = plrGui:WaitForChild("useraskGUI"):WaitForChild("USERAGREE")
 	local GUI, Row1, Spin_Weapon_Frame = plrGui:FindFirstChild("GUI"), plrGui:WaitForChild("GUI"):WaitForChild("Hud"):WaitForChild("Left"):WaitForChild("Row1"), nil
-	local Open_Weapon = Row1:WaitForChild("Perks"):WaitForChild("Shape"):WaitForChild("Fill")
+	local Open_Weapon = Row1:WaitForChild("Weapon"):WaitForChild("Shape"):WaitForChild("Fill")
 	
 	local All_Weapon_Name = {"BASEBALL", "AXES", "GUITAR", "DUAL GUN", "KATANA", "GREATSWORD"}
 	
@@ -677,19 +734,25 @@ task.spawn(function()-- Weapon Rerole
 			repeat
 				if Spin_Weapon_Frame.Visible == false then
 					firesignal(Open_Weapon.MouseButton1Click)
-					wait(1)
+					wait(0.5)
 				end
 				if Spin_Weapon_Frame.Header and Choose_Target_Weapon and Spin_Weapon_Frame.Header.Text ~= Choose_Target_Weapon then
+					print(Spin_Weapon_Frame.Header.Text.." ~= "..Choose_Target_Weapon)
+					pcall(function()
+						for i,v in ipairs(USERAGREE.Frame.responseframe:GetChildren()) do
+							if v:FindFirstChild("TextLabel") and v:FindFirstChild("TextLabel").Text == "SURE" then
+								firesignal(v.MouseButton1Click)
+							end
+						end
+					end)
 					if Auto_Random_Find_Weapon_Lucky then
 						firesignal(HolderW.Lucky.MouseButton1Click)
-						wait(1)
+						wait(0.5)
 						firesignal(HolderW.Lucky.MouseButton1Click)
-						print("firesignal W_Lucky_Spin")
 					elseif Auto_Random_Find_Weapon then
 						firesignal(HolderW.Normal.MouseButton1Click)
-						wait(1)
+						wait(0.5)
 						firesignal(HolderW.Normal.MouseButton1Click)
-						print("firesignal W_Normal_Spin")
 					end
 				end
 				wait(0.5)
@@ -701,9 +764,9 @@ end)
 
 task.spawn(function()-- Perk Rerole
 	if tonumber(game.PlaceId) ~= tonumber(103754275310547) then return end
+	local USERAGREE = plrGui:WaitForChild("useraskGUI"):WaitForChild("USERAGREE")
 	local GUI, Row1, Spin_Weapon_Frame, Spin_Perk_Frame = plrGui:FindFirstChild("GUI"), plrGui:WaitForChild("GUI"):WaitForChild("Hud"):WaitForChild("Left"):WaitForChild("Row1"), nil, nil
-	local Open_Weapon, Open_Perks = Row1:WaitForChild("Perks"):WaitForChild("Shape"):WaitForChild("Fill"), Row1:WaitForChild("Weapon"):WaitForChild("Shape"):WaitForChild("Fill")
-
+	local Open_Perks = Row1:WaitForChild("Perks"):WaitForChild("Shape"):WaitForChild("Fill")
 
 	local All_Perk_Name = {"BERSERKER", "HEALER", "FLAME", "CRITICAL", "UNDEAD", "Vampire"}
 
@@ -729,19 +792,25 @@ task.spawn(function()-- Perk Rerole
 			repeat
 				if Spin_Perk_Frame.Visible == false then
 					firesignal(Open_Perks.MouseButton1Click)
-					wait(1)
+					wait(0.5)
 				end
 				if Spin_Perk_Frame.Header and Choose_Target_Perk and Spin_Perk_Frame.Header.Text ~= Choose_Target_Perk then
+					print(Spin_Weapon_Frame.Header.Text.." ~= "..Choose_Target_Perk)
+					pcall(function()
+						for i,v in ipairs(USERAGREE.Frame.responseframe:GetChildren()) do
+							if v:FindFirstChild("TextLabel") and v:FindFirstChild("TextLabel").Text == "SURE" then
+								firesignal(v.MouseButton1Click)
+							end
+						end
+					end)
 					if Auto_Random_Find_Perk_Lucky then
 						firesignal(HolderP.Lucky.MouseButton1Click)
 						wait(0.5)
 						firesignal(HolderP.Lucky.MouseButton1Click)
-						print("firesignal W_Lucky_Spin")
-					elseif Auto_Random_Find_Weapon then
+					elseif Auto_Random_Find_Perk then
 						firesignal(HolderP.Normal.MouseButton1Click)
 						wait(0.5)
 						firesignal(HolderP.Normal.MouseButton1Click)
-						print("firesignal W_Normal_Spin")
 					end
 				end
 				wait(0.5)
@@ -751,12 +820,8 @@ task.spawn(function()-- Perk Rerole
 	end
 end)
 
-task.spawn(function()
+task.spawn(function()-- Create Room
 	if tonumber(game.PlaceId) ~= tonumber(103754275310547) then return end
-
-	repeat
-		wait(1)
-	until game:IsLoaded()
 
 	local Match, Created, TimeReTry, SpawnCFrame = workspace:WaitForChild("Match"), false, 0, HMNRT.CFrame
 
@@ -879,7 +944,7 @@ task.spawn(function()
 							if Created == false then
 								pcall(function()
 									HMNRT.CFrame = CFrame.new(PartTouch.Position)
-									wait(0.5)
+									wait(1.5)
 									if StartPlaceRedo and StartPlaceRedo.Visible == true then
 										Created = true
 									end
@@ -917,7 +982,7 @@ task.spawn(function()
 	end
 end)
 
-task.spawn(function()
+task.spawn(function()-- Inf_PerkSkill
 	local ByteNetReliable = game:GetService("ReplicatedStorage"):WaitForChild("ByteNetReliable")
 	while true do
 		if Inf_PerkSkill then
@@ -930,11 +995,7 @@ task.spawn(function()
 	end
 end)
 
-task.spawn(function()
-
-	repeat
-		wait(1)
-	until game:IsLoaded()
+task.spawn(function()-- Door
 
 	local Doors = nil
 
@@ -948,26 +1009,26 @@ task.spawn(function()
 	while true do
 		if AutoOpenTheDoor and Doors then
 			repeat
-				Camera.CameraType = Enum.CameraType.Scriptable
 				for i,v in ipairs(Doors:GetChildren()) do
 					if v:IsA("Model") and v.PrimaryPart and not v:FindFirstChild("OpennedBySomtank") then
 						pcall(function()
+							Camera.CameraType = Enum.CameraType.Scriptable
 							HMNRT.CFrame = CFrame.new(v.PrimaryPart.Position)
-							NewRayValue = Instance.new("RayValue", v)
-							NewRayValue.Name = "OpennedBySomtank"
+							NewHighlight = Instance.new("RayValue", v)
+							NewHighlight.Name = "OpennedBySomtank"
 						end)
 					end
 					wait(0.1)
+					Camera.CameraType = Enum.CameraType.Custom
 				end
-				Camera.CameraType = Enum.CameraType.Custom
-				wait(3)
+				wait(5)
 			until AutoOpenTheDoor == false
 		end
 		wait(1)
 	end
 end)
 
-task.spawn(function()
+task.spawn(function()-- Auto Skill
 	
 	local ByteNetReliable = game:GetService("ReplicatedStorage"):WaitForChild("ByteNetReliable")
 	local MainScreen = plrGui:WaitForChild("MainScreen")	
@@ -1031,21 +1092,22 @@ task.spawn(function()
 	end
 end)
 
-task.spawn(function()
+task.spawn(function()-- Auto Collet Item
 	local DropItems = workspace:WaitForChild("DropItems")
 	while true do
 		if AutoColletDropItem then
 			repeat
-				Camera.CameraType = Enum.CameraType.Scriptable
 				for i,v in ipairs(DropItems:GetChildren()) do
 					if v:IsA("BasePart") then
 						pcall(function()
+							Camera.CameraType = Enum.CameraType.Scriptable
 							HMNRT.CFrame = CFrame.new(v.Position) * CFrame.new(0,1.5,0)
 						end)						
 					end
 					wait()
+					Camera.CameraType = Enum.CameraType.Custom
 				end
-				Camera.CameraType = Enum.CameraType.Custom
+				
 				wait(5)
 			until AutoColletDropItem == false
 		end
@@ -1060,17 +1122,12 @@ task.spawn(function()
 	local EndScreen = plrGui:WaitForChild("MainScreen_Sibling"):WaitForChild("EndScreen")
 	local back_to_lobby_Button = EndScreen:WaitForChild("List"):WaitForChild("back")
 
-	repeat
-		wait(1)
-	until game:IsLoaded()
-
+	-- เช็คแมพและตั้งค่า Stage
 	if workspace:FindFirstChild("School") then
 		Stage = "Wait_Call_Helicopter"
 		Map = "School"
-		warn("***** Set Win Stage on Shcool")
-	end
-
-	if workspace:FindFirstChild("Sewers") then
+		warn("***** Set Win Stage on School")
+	elseif workspace:FindFirstChild("Sewers") then
 		Map = "Sewers"
 		Stage = "Wait_Start_Generator"
 		warn("***** Set Win Stage on Sewers")
@@ -1079,96 +1136,181 @@ task.spawn(function()
 	while true do
 		if ZombieFarm then
 			repeat
+				-- Zombie Farming Section
 				if Stage ~= "WantWin" then
 					for i,v in ipairs(Entities:GetChildren()) do
-						pcall(function()
-							if ZombieFarm and v:FindFirstChild("HumanoidRootPart") and v:FindFirstChild("Head") then
-								local HealthBar_Zombie = v:FindFirstChild("Head"):FindFirstChild("EntityHealth"):FindFirstChild("HealthBar"):FindFirstChild("Bar")
-								if HealthBar_Zombie and HealthBar_Zombie.Size.X.Scale > 0 then
-									repeat
-										HMNRT.CFrame = CFrame.new(v.HumanoidRootPart.Position) * CFrame.new(0,FarmHeight,0)
-										wait(0.001)
-									until HealthBar_Zombie.Size.X.Scale <= 0 or HealthBar_Zombie == nil or ZombieFarm == false or v == nil
-
+						local success, err = pcall(function()
+							if ZombieFarm and v and v.Parent and v:FindFirstChild("HumanoidRootPart") and v:FindFirstChild("Head") then
+								local head = v:FindFirstChild("Head")
+								if head and head:FindFirstChild("EntityHealth") then
+									local healthBar = head:FindFirstChild("EntityHealth"):FindFirstChild("HealthBar")
+									if healthBar and healthBar:FindFirstChild("Bar") then
+										local bar = healthBar:FindFirstChild("Bar")
+										if bar and bar.Size.X.Scale > 0 then
+											repeat
+												if v and v:FindFirstChild("HumanoidRootPart") and ZombieFarm then
+													HMNRT.CFrame = CFrame.new(v.HumanoidRootPart.Position) * CFrame.new(0,FarmHeight,0)
+													wait(0.001)
+												else
+													break
+												end
+											until not bar or bar.Size.X.Scale <= 0 or not ZombieFarm or not v or not v.Parent
+										end
+									end
 								end
 							end
 						end)
+
+						-- แสดง error ถ้ามี
+						if not success then
+							warn("Error in zombie farming: " .. tostring(err))
+						end
 					end
 				end
+
+				-- Map-specific objectives
 				if Map == "Sewers" then
 					if Stage == "Wait_Start_Generator" then
 						if generator == nil then
-							if workspace:FindFirstChild("Sewers") 
-								and workspace:FindFirstChild("Sewers"):FindFirstChild("Rooms") 
-								and workspace:FindFirstChild("Sewers"):FindFirstChild("Rooms"):FindFirstChild("BossRoom") 
-								and workspace:FindFirstChild("Sewers"):FindFirstChild("Rooms"):FindFirstChild("BossRoom"):FindFirstChild("generator") 
-								and workspace:FindFirstChild("Sewers"):FindFirstChild("Rooms"):FindFirstChild("BossRoom"):FindFirstChild("generator"):FindFirstChild("gen")
-								and  workspace:FindFirstChild("Sewers"):FindFirstChild("Rooms"):FindFirstChild("BossRoom"):FindFirstChild("generator"):FindFirstChild("gen"):FindFirstChildOfClass("ProximityPrompt") then
-								generator = workspace:FindFirstChild("Sewers"):FindFirstChild("Rooms"):FindFirstChild("BossRoom"):FindFirstChild("generator"):FindFirstChild("gen")
+							-- ค้นหา generator
+							local sewers = workspace:FindFirstChild("Sewers")
+							if sewers and sewers:FindFirstChild("Rooms") then
+								local bossRoom = sewers:FindFirstChild("Rooms"):FindFirstChild("BossRoom")
+								if bossRoom and bossRoom:FindFirstChild("generator") then
+									local genObj = bossRoom:FindFirstChild("generator"):FindFirstChild("gen")
+									if genObj and genObj:FindFirstChildOfClass("ProximityPrompt") then
+										generator = genObj
+										print("***** Found Generator!")
+									end
+								end
 							end
 						else
-							clip()
-							local Prox = generator:FindFirstChildOfClass("ProximityPrompt")
-							HMNRT.CFrame = CFrame.new(generator.Position) * CFrame.new(0,3,0)
-							wait(0.5)
-							fireproximityprompt(Prox)
-							wait(0.5)
-							Stage = "Wait_gate_Open"
-							noclip()
+							-- เปิด generator
+							if generator and generator.Parent and generator:FindFirstChildOfClass("ProximityPrompt") then
+								clip()
+								HMNRT.CFrame = CFrame.new(generator.Position) * CFrame.new(0,3,0)
+								wait(0.5)
+								fireproximityprompt(generator:FindFirstChildOfClass("ProximityPrompt"))
+								wait(0.5)
+								Stage = "Wait_gate_Open"
+								noclip()
+								print("***** Generator Started!")
+							else
+								generator = nil -- รีเซ็ตถ้า generator หายไป
+							end
 						end
+
 					elseif Stage == "Wait_gate_Open" then
+						WantHeli = WantHeli + 0.5
 						if WantHeli >= 18 then
-							if EndScreen.Visible == true then
+							-- รอ EndScreen แล้วกลับ lobby
+							local timeout = 0
+							while not EndScreen.Visible and timeout < 100 do
+								wait(0.1)
+								timeout = timeout + 1
+							end
+
+							if EndScreen.Visible then
 								wait(0.5)
 								firesignal(back_to_lobby_Button.MouseButton1Click)
+								print("***** Returned to Lobby (Sewers)")
 							end
-						else
-							WantHeli = WantHeli + 0.5
 						end
 					end
+
 				elseif Map == "School" then
 					if Stage == "Wait_Call_Helicopter" then
 						if RadioObjective == nil then
-							if workspace:FindFirstChild("School") 
-								and workspace:FindFirstChild("School"):FindFirstChild("Rooms") 
-								and workspace:FindFirstChild("School"):FindFirstChild("Rooms"):FindFirstChild("RooftopBoss") 
-								and workspace:FindFirstChild("School"):FindFirstChild("Rooms"):FindFirstChild("RooftopBoss"):FindFirstChild("RadioObjective") 
-								and workspace:FindFirstChild("School"):FindFirstChild("Rooms"):FindFirstChild("RooftopBoss"):FindFirstChild("RadioObjective"):FindFirstChildOfClass("ProximityPrompt") then
-								RadioObjective = workspace:FindFirstChild("School"):FindFirstChild("Rooms"):FindFirstChild("RooftopBoss"):FindFirstChild("RadioObjective")
+							-- ค้นหา Radio
+							local school = workspace:FindFirstChild("School")
+							if school and school:FindFirstChild("Rooms") then
+								local rooftop = school:FindFirstChild("Rooms"):FindFirstChild("RooftopBoss")
+								if rooftop and rooftop:FindFirstChild("RadioObjective") then
+									local radio = rooftop:FindFirstChild("RadioObjective")
+									if radio and radio:FindFirstChildOfClass("ProximityPrompt") then
+										RadioObjective = radio
+										print("***** Found Radio!")
+									end
+								end
 							end
 						else
-							clip()
-							local Prox = RadioObjective:FindFirstChildOfClass("ProximityPrompt")
-							HMNRT.CFrame = CFrame.new(RadioObjective.Position) * CFrame.new(0,3,0)
-							wait(0.5)
-							fireproximityprompt(Prox)
-							wait(0.5)
-							Stage = "Calling_Helicopter"
-							noclip()
+							-- เรียกเฮลิคอปเตอร์
+							if RadioObjective and RadioObjective.Parent and RadioObjective:FindFirstChildOfClass("ProximityPrompt") then
+								clip()
+								HMNRT.CFrame = CFrame.new(RadioObjective.Position) * CFrame.new(0,3,0)
+								wait(0.5)
+								fireproximityprompt(RadioObjective:FindFirstChildOfClass("ProximityPrompt"))
+								wait(0.5)
+								Stage = "Wait_Helicopter"
+								noclip()
+								print("***** Called Helicopter!")
+							else
+								RadioObjective = nil -- รีเซ็ตถ้า radio หายไป
+							end
 						end
-					elseif Stage == "Calling_Helicopter" then
-						if WantHeli >= 18 then
-							HMNRT.CFrame = CFrame.new(HeliObjective.Position) * CFrame.new(0,5,0)
-							local Prox = HeliObjective:FindFirstChildOfClass("ProximityPrompt")
-							wait(0.5)
-							fireproximityprompt(Prox)
-							Stage = "WantWin"
-							for i=1,10 do
-								HMNRT.CFrame = CFrame.new(HeliObjective.Position) * CFrame.new(0,5,0)
-								wait(0.2)
-								fireproximityprompt(Prox)
+
+					elseif Stage == "Wait_Helicopter" then
+						-- หา HeliObjective
+						if HeliObjective == nil then
+							local school = workspace:FindFirstChild("School")
+							if school and school:FindFirstChild("Rooms") then
+								local rooftop = school:FindFirstChild("Rooms"):FindFirstChild("RooftopBoss")
+								if rooftop then
+									-- ค้นหา helicopter objective (อาจจะชื่ออื่น)
+									for _, obj in pairs(rooftop:GetChildren()) do
+										if obj.Name:lower():find("heli") or obj.Name:lower():find("chopper") or obj:FindFirstChildOfClass("ProximityPrompt") then
+											HeliObjective = obj
+											print("***** Found Helicopter Objective: " .. obj.Name)
+											break
+										end
+									end
+								end
 							end
-							repeat
-								wait(0.3)
-							until EndScreen.Visible == true
-							wait(0.5)
-							firesignal(back_to_lobby_Button.MouseButton1Click)
-						else
-							WantHeli = WantHeli + 0.5
+						end
+
+						WantHeli = WantHeli + 0.5
+						if WantHeli >= 18 and HeliObjective then
+							-- ขึ้นเฮลิคอปเตอร์
+							if HeliObjective and HeliObjective.Parent and HeliObjective:FindFirstChildOfClass("ProximityPrompt") then
+								HMNRT.CFrame = CFrame.new(HeliObjective.Position) * CFrame.new(0,5,0)
+								local prox = HeliObjective:FindFirstChildOfClass("ProximityPrompt")
+								wait(0.5)
+								fireproximityprompt(prox)
+								Stage = "WantWin"
+
+								-- พยายามขึ้นเฮลิหลายครั้ง
+								for i=1,10 do
+									if HeliObjective and HeliObjective.Parent then
+										HMNRT.CFrame = CFrame.new(HeliObjective.Position) * CFrame.new(0,5,0)
+										wait(0.2)
+										if HeliObjective:FindFirstChildOfClass("ProximityPrompt") then
+											fireproximityprompt(HeliObjective:FindFirstChildOfClass("ProximityPrompt"))
+										end
+									end
+								end
+
+								-- รอ EndScreen แต่มี timeout
+								local timeout = 0
+								while not EndScreen.Visible and timeout < 100 do
+									wait(0.3)
+									timeout = timeout + 1
+								end
+
+								if EndScreen.Visible then
+									wait(0.5)
+									firesignal(back_to_lobby_Button.MouseButton1Click)
+									print("***** Returned to Lobby (School)")
+								else
+									warn("***** Timeout waiting for EndScreen")
+								end
+							else
+								HeliObjective = nil -- รีเซ็ตถ้า heli หายไป
+							end
 						end
 					end
 				end
-				print("***** WantHeli : "..WantHeli)
+
+				print("***** Stage: " .. Stage .. " | WantHeli: " .. WantHeli)
 				wait(0.5)
 			until ZombieFarm == false
 			workspace.Gravity = 190
@@ -1177,7 +1319,7 @@ task.spawn(function()
 	end
 end)
 
-task.spawn(function()
+task.spawn(function()-- Auto Kill
 	local ByteNetReliable = game:GetService("ReplicatedStorage"):WaitForChild("ByteNetReliable")
 	while true do
 		if ZombieFarm or AutoKill then
@@ -1227,9 +1369,14 @@ for name, value in pairs(configs) do
 		element.Value = value
 	end
 end
-local lastPos, afkTime, afkThreshold = HMNRT.Position, 0, 30
+local lastPos, afkTime, afkThreshold, StuckTime = HMNRT.Position, 0, 30, 0
 while true do
 	pcall(function()
+		StuckTime = StuckTime + 2
+		if StuckTime >= 1080 then
+			game:GetService("TeleportService"):Teleport(103754275310547, game.Players.LocalPlayer)
+			wait(10)
+		end
 		task.wait(2)
 		player = game.Players.LocalPlayer
 		character = player.Character
