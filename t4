@@ -3,7 +3,7 @@ repeat wait(1) until game:IsLoaded()
 repeat wait(1) until game.Players.LocalPlayer and game.Players.LocalPlayer.Character
 
 if getgenv().SomtankIsRun then return end
-getgenv().SomtankIsRun = true
+getgenv().SomtankIsRun = false
 
 local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
 
@@ -19,28 +19,28 @@ local function Translate(ThaiLang, EngLang)
 	return Resut
 end
 
-WindUI.Services.mysuperservicetogetkey = {
-	Name = "My Super Service",
-	Icon = "droplet",
+--WindUI.Services.mysuperservicetogetkey = {
+--	Name = "Somtank Service",
+--	Icon = "droplet",
 
-	Args = { "ServiceId" },
-	New = function(ServiceId)
-		function validateKey(key)
-			verifyKey(key)
-			if not key then
-				return false, "Key is invalid!" 
-			end            
-			return true, "Key is valid!" 
-		end
-		function copyLink()
-			return setclipboard(copyLink())
-		end
-		return {
-			Verify = validateKey,
-			Copy = copyLink
-		}
-	end
-}
+--	Args = { "ServiceId" },
+--	New = function(ServiceId)
+--		function validateKey(key)
+--			verifyKey(key)
+--			if not key then
+--				return false, "Key is invalid!" 
+--			end            
+--			return true, "Key is valid!" 
+--		end
+--		function copyLink()
+--			return setclipboard(copyLink())
+--		end
+--		return {
+--			Verify = validateKey,
+--			Copy = copyLink
+--		}
+--	end
+--}
 
 local Window = WindUI:CreateWindow({
 	Title = "Somtank",
@@ -54,17 +54,17 @@ local Window = WindUI:CreateWindow({
 	SideBarWidth = 200,
 	ScrollBarEnabled = true,
 	SideBarWidth = 200,
-	KeySystem = {
-		Note = "Example Key System. With platoboost, etc.",
-		API = {
-			{   
-				Type = "platoboost",
-				ServiceId = service,
-				Secret = secret,
-			}
-		},
-		SaveKey = true,
-	},
+	--KeySystem = {
+	--	Note = Translate("กดเลือกลิ้งด้านล่างเพื่อเอาคีย์นะครัล", "Click on the link below to get the key."),
+	--	API = {
+	--		{   
+	--			Type = "platoboost",
+	--			ServiceId = service,
+	--			Secret = secret,
+	--		}
+	--	},
+	--	SaveKey = true,
+	--},
 })
 
 WindUI.TransparencyValue = 0.1
